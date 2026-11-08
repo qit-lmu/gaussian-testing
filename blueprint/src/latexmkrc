@@ -1,0 +1,6 @@
+# The pdf blueprint uses pdflatex (no fontspec/unicode-math), so it builds with
+# a standard TeX Live install. Switch $pdflatex to xelatex/lualatex if you adapt
+# print.tex to use unicode-math.
+$pdf_mode = 1;
+$pdflatex = 'pdflatex -synctex=1 %O %S';
+@default_files = ('print.tex');

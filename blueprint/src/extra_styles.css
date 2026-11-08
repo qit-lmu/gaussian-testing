@@ -1,0 +1,61 @@
+/* Keep project navigation at the right of every page header. */
+body > header {
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+body > header #doc_title {
+  min-width: 0;
+  text-align: center;
+}
+
+body > header .header-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+body > header .header-links a {
+  margin-right: 0;
+  white-space: nowrap;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+/* Preserve the graph title's central position beside the layout switch. */
+header.graph-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+header.graph-header h1 {
+  position: static;
+}
+
+header.graph-header .header-links {
+  justify-self: end;
+}
+
+@media (max-width: 640px) {
+  body > header {
+    display: grid;
+    height: auto;
+    grid-template-columns: 1fr auto;
+    row-gap: 0.25rem;
+  }
+
+  body > header h1#doc_title {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    font-size: 1.1rem;
+    line-height: 1.4;
+  }
+
+  body > header .header-links {
+    grid-row: 1;
+    grid-column: 2;
+  }
+}

@@ -1,0 +1,26 @@
+% Macros used only by the printed (pdf) version of the blueprint.
+\newcommand{\bplink}[2]{\hyperref[#1]{#2}}
+\newcommand{\bpdecls}[1]{\par\begingroup\raggedright #1\par\endgroup}
+% Canonical source links also work after downloading the PDF from the site root.
+\newcommand{\bpsource}[3]{\href{https://qit-lmu.github.io/gaussian-testing/sources/#1.html\#L#2}{#3}}
+%
+% The first block provides dummy definitions of the web-only blueprint macros
+% (\lean, \leanok, \uses, ...) so that the pdf compiler silently ignores them.
+
+\newcommand{\lean}[1]{}
+\newcommand{\discussion}[1]{}
+\newcommand{\leanok}{}
+\newcommand{\leanproof}[1]{}
+\newcommand{\mathlibok}{}
+\newcommand{\notready}{}
+
+% Make sure arguments of \uses / \proves are real labels (invisible \ref), so
+% latex warns on undefined labels but nothing is printed in the pdf.
+\ExplSyntaxOn
+\NewDocumentCommand{\uses}{m}
+ {\clist_map_inline:nn{#1}{\vphantom{\ref{##1}}}%
+  \ignorespaces}
+\NewDocumentCommand{\proves}{m}
+ {\clist_map_inline:nn{#1}{\vphantom{\ref{##1}}}%
+  \ignorespaces}
+\ExplSyntaxOff

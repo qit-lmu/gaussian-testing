@@ -1,0 +1,1624 @@
+% Checked results and scope qualifications for the repository manuscript.
+% Markers apply only to the concrete statement of their node.
+
+\chapter{Scope and status}
+
+This blueprint follows \emph{Testing bosonic and fermionic Gaussian states
+with a constant number of copies}, the manuscript in
+\texttt{material/manuscript.tex}. The manuscript index lists the results in
+paper order, links each one to its source and the corresponding Lean code, and
+explains which parts have been proved. Each node begins with a linked manuscript
+reference or the designation \emph{Supporting result} when it has no single
+manuscript counterpart. References marked \emph{In the proof of} identify
+intermediate steps. Links such as \paperref{r6-6}{Lemma~6.6} open the manuscript index. Numbers
+prefixed with B identify entries in the blueprint itself.
+
+The axiom audit in \texttt{scripts/Audit.lean} lists and checks selected Lean declarations.
+It requires exactly \texttt{propext}, \texttt{Classical.choice}, and
+\texttt{Quot.sound} for each one.
+
+Boxes in the graph are definitions. Ellipses are mathematical results.
+A green border marks a formalized statement. A pale mint background marks a formalized proof.
+A green background means the proof and all its ancestors in the graph are formalized.
+A pale amber node marked \emph{Partial proof} records the checked parts and
+open obligations together. Each numbered manuscript theorem has one node.
+Arguments proved within a manuscript result stay with that result's node.
+The Gaussian preliminaries nodes collect reusable background used by those results.
+Edges follow the manuscript prerequisites and can refer to a proved part of
+a theorem. Where an existing coefficient-model proof takes a different route,
+the node text records that route explicitly; its backwards dependencies do not
+replace the manuscript argument in the graph. Lemma~3.1 gives a unique smooth forward trajectory from each
+initial ray. Its proof uses the Fubini--Study energy estimate to rule out
+a finite maximal time. Theorem~3.4 applies the gradient inequality of
+Lemma~3.3 and implies Theorem~1.2.
+
+The checked development combines finite-dimensional polynomial gap inequalities
+with a Hilbert-space gradient-flow argument and concrete fermionic and bosonic
+models. The numbered bosonic results use the manuscript's physical vacuum-orbit
+classes on $L^2(\mathbb R^m)$; the fermionic coordinate class is identified
+with the independently defined $\mathrm{SO}(2m)$ Gaussian orbits.
+The required fermionic exterior-Fock and copy-action identifications are checked.
+For a swap-commuting orthogonal
+projection on two copies of any complex Hilbert space, the spectrum of the
+three-copy average gives the sharp angular and linear fidelity bounds with
+the same comparison state. The overlap with each such
+state bounds the supremum fidelity from below. This comparison also gives
+fidelity bounds for all four concrete Gaussian tests. All numbered Section~6
+results and the accepting circuits in Figure~1(b)--(d) are checked.
+Corollaries~5.3 and~6.8 construct the independent repeated-test probability laws
+and bound the integer numbers of input copies. The Bell-readout implementation
+in Figure~1(a) is checked as well. Theorem~4.1 includes the exact spherical
+Kac gap $5/12$, with an explicit degree-four harmonic witness attaining
+$7/12$ away from constants. All 18 numbered results and all four Figure~1
+readouts are checked; separately indexed unused assertions remain outside
+this completion claim.
+
+Gaussian robustness statements use normalized pure states; Lemma~6.2
+also applies the two-copy test to arbitrary density operators. Write $\tau\ge0$ for an upper
+bound on the rejection probability, so $p(\psi)\ge1-\tau$. The manuscript's
+\paperref{trace-distance}{trace-distance condition} uses $\varepsilon,\delta\in(0,1)$.
+An $\varepsilon$-far pure state has squared overlap at most $1-\varepsilon^2$
+with every target state. Corollaries~5.3 and~6.8 use the squared-fidelity promise
+directly and count copies as the rounds times the copies consumed per round.
+The older scalar repetition lemmas use an infidelity threshold $\eta>0$;
+setting $\eta=\varepsilon^2$ gives the draft's numerical threshold.
+The rank-one trace-distance identity is checked on arbitrary complex Hilbert
+spaces, and gives the distance formulation of Theorem~1.1.
+
+\input{manuscript-index}
+
+\chapter{Gradient flow and robustness}\label{sec:flow}
+
+Lean constructs the two-copy and three-copy spaces by completing the
+algebraic tensor products in the Hilbert norm. The pair operators give the
+moments in Lemma~3.2 and the spectral hypothesis gives the gradient bound
+in Lemma~3.3. Theorem~3.4 applies the gradient-flow proof to this bound.
+One preliminaries node collects the reusable Hilbert-space and projective
+background. Each numbered result owns its proof steps: energy and continuation
+in Lemma~3.1, spectral equivalence in Lemma~3.3, and Eq.~(3.7) and the limiting
+trajectory argument in Theorem~3.4. Independently stated definitions, identities,
+and claims retain their own nodes, including the contraction and critical-point claim.
+
+\begin{lemma}[Hilbert-space and projective preliminaries]\label{prelim:flow}
+  \lean{GaussianTesting.HilbertSquare, GaussianTesting.hilbertTensorSquare, GaussianTesting.dense_span_hilbertTmul, GaussianTesting.dense_span_hilbertTriple, GaussianTesting.hilbertCoords, GaussianTesting.pureFidelity, GaussianTesting.rayTangentMetric, GaussianTesting.tendsto_dist_div_time_rayOfTangent, GaussianTesting.tendsto_rayTangentMetric_of_dist, GaussianTesting.pureFidelity_sq_le_iff, GaussianTesting.rayChartHomeomorph, GaussianTesting.contDiffOn_rayTransition, GaussianTesting.rayDist_mk, GaussianTesting.rayMetricSpace, GaussianTesting.rayCompleteSpace, GaussianTesting.projective_angle_le_of_chord_bound, GaussianTesting.overlap_le_pureFidelity, GaussianTesting.pureFidelity_nonneg, GaussianTesting.pureFidelity_le_one, GaussianTesting.sq_overlap_le_pureFidelity_sq, GaussianTesting.pureFidelity_phase}
+  \leanok
+  \noderef{projective-angle}{Section~3, preliminaries}\par
+  This node collects only the general background used by the section's proofs:
+  completed Hilbert tensor products, projective geometry and path-length
+  comparison, and elementary bounds for supremum fidelity.
+
+  \textbf{Hilbert tensor products.}
+  The completed tensor square and cube have dense spans of elementary tensors.
+  A Hilbert basis of arbitrary cardinality identifies these spaces with
+  product-indexed $\ell^2$. These constructions underlie
+  \paperref{acceptance}{Eq.~(3.1)} and \paperref{three-copy}{Eq.~(3.6)};
+  the test-specific pair operators and their moments belong to those result nodes.
+
+  \textbf{Projective geometry.}
+  On the open set of rays $[x]$ with $\langle u,x\rangle\ne0$, the affine
+  chart sends $[x]$ to $x/\langle u,x\rangle$. These charts cover the
+  quotient of nonzero vectors by nonzero scalars and have smooth changes of
+  coordinates. For unit representatives $x,y$, the distance is
+  $d_{\rm FS}([x],[y])=\arccos|\langle x,y\rangle|$. It induces the quotient
+  topology and is complete when the Hilbert space is complete.
+  At a unit representative $\psi$, the tangent metric is
+  $g_\psi(v,w)=\operatorname{Re}\langle v,w\rangle$ on $\psi^\perp$.
+  The Fubini--Study speed of a curve with horizontal velocity $v$ is $\norm{v}$.
+
+  \textbf{General path-length comparison.}
+  Let $\gamma$ be a continuous path of unit vectors on $[0,t]$ and $v$ a
+  real-valued function. Suppose every subinterval $[s,u]\subseteq[0,t]$
+  satisfies $\norm{\gamma(u)-\gamma(s)}\le v(s)-v(u)$. Then the
+  \paperref{projective-angle}{projective angle} between its endpoints satisfies
+  \[
+    \arccos|\langle\gamma(0),\gamma(t)\rangle|\le v(0)-v(t).
+  \]
+  For each $k>1$, a sufficiently fine partition makes the angle between
+  successive unit vectors on the underlying real unit sphere at most $k$
+  times their chord length. The triangle inequality bounds the endpoint
+  angle by their sum, and the decreases in $v$ telescope. Let $k$ decrease
+  to one. The projective angle is at most the real unit-sphere angle.
+
+  \textbf{Supremum fidelity.}
+  For a nonempty class $\mathcal G$ of unit vectors, write
+  $F_{\mathcal G}(\psi)=\sup_{\phi\in\mathcal G}|\langle\psi,\phi\rangle|$,
+  as in \paperref{fidelity}{Eq.~(3.2)}. If $\psi$ is a unit vector, then
+  $0\le F_{\mathcal G}(\psi)\le1$. For each
+  $\phi\in\mathcal G$,
+  \[
+    |\langle\psi,\phi\rangle|\le F_{\mathcal G}(\psi),
+    \qquad \fid{\psi}{\phi}\le F_{\mathcal G}(\psi)^2.
+  \]
+  Cauchy--Schwarz bounds the overlaps above, and each member of the set
+  defining the supremum is bounded by that supremum. Both sides are
+  nonnegative, so the comparison persists after squaring. Multiplying $\psi$
+  by a scalar of unit norm preserves all absolute overlaps and their supremum.
+  For a nonempty class of unit vectors, bounding the squared supremum by $r$
+  is equivalent to bounding every squared overlap by $r$.
+\end{lemma}
+\leanproof{prelim:flow}
+
+\begin{definition}[Acceptance projection]\label{def:acceptance}
+  \lean{GaussianTesting.TensorSquare.IsAcceptance, GaussianTesting.TensorSquare.IsAcceptance.norm_le_one, GaussianTesting.TensorSquare.accProbA}
+  \leanok
+  \uses{prelim:flow}
+  \noderef{acceptance}{Eq.~(3.1)}\par
+  Let $P$ be a self-adjoint idempotent on the completed tensor square that commutes with
+  swap. On a unit vector $\psi$ its acceptance probability is
+  $p(\psi)=\operatorname{Re}\langle\psi^{\otimes2},P\psi^{\otimes2}\rangle$.
+\end{definition}
+
+\begin{definition}[Certainty set and fidelity]\label{def:fidelity}
+  \lean{GaussianTesting.certaintyStates, GaussianTesting.pureFidelity}
+  \leanok
+  \uses{def:acceptance}
+  \noderef{fidelity}{Eq.~(3.2)}\par
+  For a two-copy test with acceptance probability $p$, its certainty set is
+  $\mathcal G=\{\phi:\norm{\phi}=1,\ p(\phi)=1\}$. More generally, for a
+  nonempty class $\mathcal G$ of unit vectors, its fidelity with $\psi$ is
+  \[
+    F_{\mathcal G}(\psi)=\sup_{\phi\in\mathcal G}
+      |\langle\psi,\phi\rangle|.
+  \]
+\end{definition}
+
+\begin{lemma}[Eq. (3.4), Fubini--Study gradient of acceptance]\label{lem:acceptance-gradient}
+  \lean{GaussianTesting.fubiniStudyGradient_rayAcceptance, GaussianTesting.TensorSquare.hasGradientAt_rayAcceptance, GaussianTesting.TensorSquare.isFubiniStudyGradient_iff, GaussianTesting.TensorSquare.gradient_rayAcceptance_phase, GaussianTesting.TensorSquare.hasFDerivAt_accProbA_rayChartSection}
+  \leanok
+  \uses{def:acceptance, prelim:flow}
+  \noderef{gradient}{Eq.~(3.4)}\par
+  At a ray $[\psi]$ with unit representative $\psi$, write the centered
+  chart as $v\mapsto[\psi+v]$ for $v\in\psi^\perp$. Its tangent metric
+  is $g_\psi(v,w)=\operatorname{Re}\langle v,w\rangle$. For every such $v$,
+  the differential of acceptance satisfies
+  \[
+    dp_{[\psi]}(v)=g_\psi(G,v),\qquad
+    G=4\big((I\otimes\langle\psi|)P\psi^{\otimes 2}-p([\psi])\psi\big).
+  \]
+  Thus $G$ is the unique horizontal vector representing the differential.
+  For a curve through the chart origin with velocity $v$, the
+  Fubini--Study speed is $\norm{v}$. Polarization gives the displayed metric. Differentiating
+  the two-copy expectation and using swap symmetry gives the factor $4$.
+  Projection onto $\psi^\perp$ subtracts the component $4p([\psi])\psi$.
+  Multiplying $\psi$ by a phase multiplies $G$ by the same phase.
+\end{lemma}
+\leanproof{lem:acceptance-gradient}
+
+\begin{lemma}[Existence and uniqueness of the global gradient flow]\label{lem:flow-existence}
+  \lean{GaussianTesting.projective_gradient_flow, GaussianTesting.TensorSquare.exists_unique_smooth_projectiveFlow, GaussianTesting.TensorSquare.chartGrad, GaussianTesting.TensorSquare.IsProjectiveFlowOn, GaussianTesting.TensorSquare.IsProjectiveFlowOn.eqOn_Icc, GaussianTesting.SmoothRayCurveOn, GaussianTesting.exists_global_of_finite_extension, GaussianTesting.TensorSquare.IsProjectiveFlowOn.exists_unit_lift_Icc, GaussianTesting.TensorSquare.IsUnitFlowOn.integral_norm_velocity_sq_eq, GaussianTesting.TensorSquare.IsProjectiveFlowOn.dist_sq_le_energy, GaussianTesting.TensorSquare.IsProjectiveFlowOn.exists_limit_Ico, GaussianTesting.TensorSquare.IsProjectiveFlowOn.continue_at_finite_time}
+  \leanok
+  \uses{lem:acceptance-gradient}
+  \noderef{r3-1}{Lemma~3.1}\par
+  For every initial ray in any complex Hilbert space and every swap-commuting
+  orthogonal projection on its completed tensor square,
+  \paperref{flow}{Eq.~(3.3)} has a unique solution on $[0,\infty)$. Its
+  coordinates are smooth in each chart through the current ray, with
+  one-sided derivatives at time zero.
+
+  \textbf{Energy and finite-endpoint continuation.}
+  For the \paperref{local-flow-energy}{energy estimate in the manuscript proof},
+  let $\rho$ solve \paperref{flow}{Eq.~(3.3)} in ray charts. On each closed
+  subinterval $[a,b]$ it agrees with the projection of a unit-vector solution
+  $\gamma$. Its velocity within that interval satisfies
+  \[
+    (p\circ\gamma)'(t)=\norm{\nabla p(\gamma(t))}^2,\qquad
+    \int_a^b \norm{\dot\gamma(t)}^2\,dt
+      = p(\gamma(b))-p(\gamma(a)).
+  \]
+  On a singleton interval both sides of the integral identity vanish.
+  The path-length bound and Cauchy--Schwarz give
+  \[
+    d_{\rm FS}(\rho(a),\rho(b))^2
+    \le (b-a)\bigl(p(\rho(b))-p(\rho(a))\bigr)\le b-a .
+  \]
+  Thus a solution on $[a,b)$, with $a<b$, converges to a ray as $t\uparrow b$.
+  Restarting the local ODE at this ray extends the trajectory past $b$.
+  The left and right chart derivatives agree at the joining time.
+
+  Lean uses the Fubini--Study gradient in \bplink{lem:acceptance-gradient}{Eq.~(3.4)}.
+  Multiplying a unit representative by a phase multiplies the field by
+  that phase, and the field is complex-orthogonal to the representative.
+  In each affine chart the velocity is the derivative of the chart map
+  applied to this field at a normalized representative. A unit-vector
+  solution projects to a solution of this chart ODE. Local Lipschitz
+  uniqueness in the charts shows that any two ray solutions starting
+  together agree on their common interval.
+
+  Local solutions therefore agree on overlaps and define a trajectory up
+  to the supremum of their end times. If that supremum were finite, the
+  energy estimate and continuation argument above
+  would extend the trajectory past it. This proves global existence.
+  Uniqueness on closed subintervals gives uniqueness at every forward time.
+\end{lemma}
+\leanproof{lem:flow-existence}
+
+\begin{lemma}[Contraction and critical-point characterization]\label{lem:contraction-critical}
+  \lean{GaussianTesting.TensorSquare.contractionOperator, GaussianTesting.TensorSquare.contractionOperator_apply, GaussianTesting.TensorSquare.contractionOperator_self, GaussianTesting.TensorSquare.contractionOperator_isPositive, GaussianTesting.TensorSquare.contractionOperator_isSelfAdjoint, GaussianTesting.TensorSquare.norm_contractionOperator_le_one, GaussianTesting.TensorSquare.contractionOperator_first_moment, GaussianTesting.TensorSquare.contractionOperator_second_moment, GaussianTesting.TensorSquare.gradAccA_eq_contractionOperator, GaussianTesting.TensorSquare.gradAccA_eq_zero_iff_contractionOperator, GaussianTesting.TensorSquare.fderiv_rayAcceptance_eq_zero_iff_contractionOperator, GaussianTesting.contraction_criticalPoint_iff}
+  \leanok
+  \uses{def:acceptance, lem:acceptance-gradient}
+  \noderef{contraction}{After Lemma~3.1}\par
+  For a unit representative $\psi$ in any complex Hilbert space, define
+  $J_\psi x=x\otimes\psi$. The manuscript's operator is the bounded compression
+  \[
+    K_\psi=J_\psi^\dagger P J_\psi
+      =(I\otimes\langle\psi|)P(I\otimes|\psi\rangle).
+  \]
+  It is positive and self-adjoint, with $\norm{K_\psi}\le1$. Its first two
+  moments are exactly
+  \[
+    \langle\psi,K_\psi\psi\rangle=p(\psi),\qquad
+    \langle\psi,K_\psi^2\psi\rangle=q(\psi).
+  \]
+  The gradient is $4(K_\psi\psi-p(\psi)\psi)$, and the following are equivalent:
+  the differential of projective acceptance at $[\psi]$ vanishes;
+  $\nabla p(\psi)=0$; and $K_\psi\psi=p(\psi)\psi$.
+
+  The adjoint identity identifies $J_\psi^\dagger$ with the existing Riesz
+  contraction. Compressing the orthogonal projection proves positivity,
+  while $J_\psi$ is an isometry for unit $\psi$ and $\norm{P}\le1$ gives
+  contractivity. Applying $K_\psi$ to $\psi$ recovers the previously defined
+  contracted vector. Self-adjointness identifies its squared norm with the
+  second moment. Finally, \bplink{lem:acceptance-gradient}{Eq.~(3.4)} identifies
+  the horizontal field with the differential's metric dual in the centered
+  projective chart; its factor $4$ is nonzero, giving the critical-point equation.
+\end{lemma}
+\leanproof{lem:contraction-critical}
+
+\begin{lemma}[Gradient norm identity]\label{lem:gradient-identity}
+  \lean{GaussianTesting.TensorSquare.norm_gradAccA_sq, GaussianTesting.norm_gradAcc_sq, GaussianTesting.TensorSquare.norm_gradAccA_sq_eq_variance}
+  \leanok
+  \uses{lem:acceptance-gradient, lem:contraction-critical}
+  \noderef{gradient-norm}{Eq.~(3.5)}\par
+  On a complex Hilbert space the \paperref{contraction}{contraction with one copy}
+  gives the \bplink{lem:acceptance-gradient}{acceptance gradient, Eq.~(3.4)}.
+  The \paperref{gradient-norm}{gradient identity, Eq.~(3.5)} reads
+  $\norm{\nabla p(\psi)}^2=16(q(\psi)-p(\psi)^2)$ for unit $\psi$.
+  The checked operator moments give the manuscript's variance interpretation:
+  \[
+    \norm{\nabla p(\psi)}^2
+      =16\bigl(\langle K_\psi^2\rangle_\psi-\langle K_\psi\rangle_\psi^2\bigr).
+  \]
+\end{lemma}
+\leanproof{lem:gradient-identity}
+
+\begin{definition}[Three-copy average and pair operators]\label{lem:three-copy-average}
+  \lean{GaussianTesting.threeCopyAverage, GaussianTesting.threeCopyPair12, GaussianTesting.threeCopyPair13, GaussianTesting.threeCopyPair23, GaussianTesting.threeCopyAverage_eq, GaussianTesting.threeCopyAverage_positive_contraction}
+  \leanok
+  \uses{def:acceptance}
+  \noderef{three-copy}{Eq.~(3.6)}\par
+  A two-copy acceptance projection $P$ acts on each pair of factors of the
+  completed Hilbert tensor cube. For instance, the matrix element of $P_{12}$
+  between $a\otimes b\otimes c$ and $x\otimes y\otimes z$ is
+  $\langle a\otimes b,P(x\otimes y)\rangle\langle c,z\rangle$.
+  On the completed products, $P_{12}=P\otimes I$ under the associator,
+  $P_{23}=I\otimes P$, and $P_{13}$ is obtained by permuting the factors.
+  The matrix elements identify these operators with their expressions in
+  any Hilbert basis coordinates, using the tensor-product preliminaries.
+  Thus the positive contraction
+  $S=(P_{12}+P_{13}+P_{23})/3$ has the coordinate representation used in
+  the moment calculation for every choice of basis.
+\end{definition}
+
+\begin{lemma}[Three-copy moment identities]\label{lem:three-copy-moments}
+  \lean{GaussianTesting.threeCopyAverage_moments, GaussianTesting.hilbert_first_moment, GaussianTesting.hilbert_second_moment, GaussianTesting.hilbert_contr_coords}
+  \leanok
+  \uses{lem:three-copy-average}
+  \noderef{r3-2}{Lemma~3.2}\par
+  For a unit vector $\psi$ in any complex Hilbert space put
+  $q(\psi)=\norm{(I\otimes\langle\psi|)P\psi^{\otimes2}}^2$. Then
+  \[
+    \langle\psi^{\otimes3},S\psi^{\otimes3}\rangle=p(\psi),
+    \qquad \langle\psi^{\otimes3},S^2\psi^{\otimes3}\rangle=\frac{p(\psi)+2q(\psi)}{3}.
+  \]
+  Both proofs expand the three-copy average. The diagonal projection terms give
+  $p$, and the six cross terms give $q$ by permutation symmetry. Lean performs
+  this expansion in Hilbert basis coordinates and uses the Riesz identity
+  for the contraction to transfer $q$ back to the original space.
+\end{lemma}
+\leanproof{lem:three-copy-moments}
+
+\begin{lemma}[Fixed tensor cubes and certainty states]\label{lem:triple-certainty}
+  \lean{GaussianTesting.threeCopyAverage_fixed_iff_accProb_eq_one, GaussianTesting.threeCopyAverage_spectrum_subset_unitInterval, GaussianTesting.threeCopyAverage_hasEigenvalue_one, GaussianTesting.threeCopyAverage_isGreatest_eigenvalue}
+  \leanok
+  \uses{def:fidelity, lem:three-copy-average, lem:three-copy-moments}
+  \noderef{triple-certainty}{Section~3, fixed tensor cubes}\par
+  The three-copy average $S$ has spectrum in $[0,1]$. For any unit vector
+  $\psi$, let $v=\psi^{\otimes3}$. Then $Sv=v$ if and only if $p(\psi)=1$.
+  Indeed, the first moment is $\langle v,Sv\rangle=p(\psi)$, and
+  $\norm{Sv}\le1$. If $p(\psi)=1$, expanding $\norm{Sv-v}^2$ gives zero.
+  Conversely, if $Sv=v$, the first moment is $\norm{v}^2=1$.
+  Thus any certainty state supplies a nonzero eigenvector at $1$.
+  When the certainty set is nonempty, $1$ is the largest eigenvalue.
+\end{lemma}
+\leanproof{lem:triple-certainty}
+
+\begin{lemma}[Moment and gradient bounds from the spectrum]\label{lem:bound-gradient}
+  \lean{GaussianTesting.lojasiewiczData_of_threeCopy_spectrum, GaussianTesting.norm_gradAcc_sq_ge_of_threeCopy_spectrum, GaussianTesting.symmetricCube, GaussianTesting.threeCopyAverage_maps_symmetricCube, GaussianTesting.symmetricThreeCopyAverage, GaussianTesting.symmetricThreeCopyAverage_positive_contraction, GaussianTesting.symmetricThreeCopyAverage_moments, GaussianTesting.lojasiewiczData_of_symmetricThreeCopy_spectrum, GaussianTesting.norm_gradAcc_sq_ge_of_symmetricThreeCopy_spectrum, GaussianTesting.spectrum_gap_iff_polynomial_nonneg, GaussianTesting.spectrum_gap_iff_quadraticForm_nonneg, GaussianTesting.SpectralGapHyp}
+  \leanok
+  \uses{lem:three-copy-moments, lem:gradient-identity}
+  \noderef{r3-3}{Lemma~3.3}\par
+  Let $P$ be an orthogonal two-copy projection commuting with swap and
+  $S=(P_{12}+P_{13}+P_{23})/3$ on the completed tensor cube of a complex
+  Hilbert space. If $\mathrm{spec}(S)\subseteq[0,\alpha]\cup\{1\}$ for
+  $0\le\alpha\le1$, then
+  $\norm{\nabla p}^2\ge16(p-\tfrac32\alpha)(1-p)$ on unit vectors.
+
+  \textbf{Spectral equivalence.}
+  The \paperref{spectral-gap}{spectral hypothesis} can be expressed as a
+  polynomial inequality. Let $S$ be a positive contraction on a complex Hilbert space and $\alpha\in\R$.
+  Then $\mathrm{spec}_{\C}(S)\subseteq [0,\alpha]\cup\{1\}$ if and only if
+  $(S-I)(S-\alpha I)\ge0$, equivalently if and only if
+  $\operatorname{Re}\langle v,(S-I)(S-\alpha I)v\rangle\ge0$ for every $v$.
+  By continuous functional calculus the polynomial is positive precisely when
+  $(t-1)(t-\alpha)\ge0$ on the spectrum of $S$, which lies in $[0,1]$.
+  The finite predicate \texttt{SpectralGapHyp} uses this quadratic form for the
+  \paperref{three-copy}{three-copy average, Eq.~(3.6)}.
+
+  The \paperref{spectral-gap}{spectral hypothesis} implies
+  polynomial positivity for the three-copy average. Lean evaluates
+  $(S-I)(S-\alpha I)\ge0$ on $\psi^{\otimes3}$ and uses
+  \paperref{r3-2}{Lemma~3.2} to get $q\ge p-\tfrac32\alpha(1-p)$.
+  The \paperref{gradient-norm}{gradient identity, Eq.~(3.5)} gives the
+  claimed gradient bound.
+  This is the moment inequality used by \paperref{r3-4}{Theorem~3.4}.
+
+  \textbf{Symmetric-cube strengthening.}
+  The \paperref{symmetric-cube-gap}{footnote immediately before Lemma~3.3}
+  is also checked: it suffices to assume the spectral inclusion for
+  $S|_{\operatorname{Sym}^3(\mathcal H)}$.
+  Lean constructs this closed subspace as the common fixed space of the
+  adjacent factor swaps, proves that $S$ commutes with both swaps, and
+  restricts $S$ to it. The restriction is a positive contraction and has the
+  same two moments on $\psi^{\otimes3}$. Applying the preceding polynomial
+  argument on this subspace proves the same moment and gradient bounds.
+\end{lemma}
+\leanproof{lem:bound-gradient}
+
+\begin{theorem}[Sharp angular and linear bounds, including Eq. (3.7)]\label{thm:bound-fidelity-gradient-flow}
+  \lean{GaussianTesting.robustness_of_threeCopy_spectrum, GaussianTesting.angular_witness_of_threeCopy_spectrum, GaussianTesting.angular_fidelity_of_threeCopy_spectrum, GaussianTesting.bounds_of_angular_witness, GaussianTesting.RobustnessBounds, GaussianTesting.RobustnessBounds.angular_fidelity, GaussianTesting.ray_acceptance_strictly_increases_to_one, GaussianTesting.rayAcceptance_strictMonoOn, GaussianTesting.rayAcceptance_tendsto_one, GaussianTesting.TensorSquare.IsProjectiveFlowOn.one_sub_rayAcceptance_ge, GaussianTesting.TensorSquare.IsProjectiveFlowOn.rayAcceptance_lt_one, GaussianTesting.TensorSquare.IsProjectiveFlowOn.dist_le_integral_speed, GaussianTesting.ray_integral_speed_le_potential_sub, GaussianTesting.ray_dist_le_potential_sub, GaussianTesting.ray_dist_le_potential, GaussianTesting.TensorSquare.continuous_rayAcceptance, GaussianTesting.ray_trajectory_cauchy, GaussianTesting.ray_trajectory_tendsto_certainty, GaussianTesting.ray_trajectory_tendsto_certaintyState, GaussianTesting.ray_flow_derivative_bounds, GaussianTesting.rayGradientNormSq_ge_of_threeCopy_spectrum, GaussianTesting.TensorSquare.rayGradientNormSq_mk, GaussianTesting.tendsto_dist_div_time_of_horizontal_lift, GaussianTesting.TensorSquare.IsProjectiveFlowOn.hasDerivWithinAt_rayAcceptance, GaussianTesting.TensorSquare.IsProjectiveFlowOn.rayAcceptance_mono, GaussianTesting.TensorSquare.IsProjectiveFlowOn.tendsto_dist_div_time}
+  \leanok
+  \uses{lem:flow-existence, lem:bound-gradient, prelim:flow}
+  \noderef{r3-4}{Theorem~3.4}\par
+  \textbf{Proof status.} Both conclusions are proved from the projective
+  gradient flow of Lemma~3.1, its path-length estimate, and its certainty
+  limit, following the manuscript's argument.
+
+  Let $P$ be an orthogonal projection on $\mathcal H^{\otimes2}$ commuting
+  with swap, with nonempty \paperref{fidelity}{certainty set (Eq.~(3.2))} $\mathcal G$.
+  Form $S=(P_{12}+P_{13}+P_{23})/3$ on $\mathcal H^{\otimes3}$ and assume
+  $\mathrm{spec}(S)\subseteq[0,\alpha]\cup\{1\}$ for $0\le\alpha<2/3$.
+  Put $C_\alpha=(1-3\alpha/2)^{-1}$.
+
+  For each unit input $\psi$, there is one $\phi\in\mathcal G$ with both
+  properties. When $p(\psi)>3\alpha/2$,
+  \[
+    \arccos F_{\mathcal G}(\psi)
+    \le \arccos|\langle\psi,\phi\rangle|
+    \le \tfrac12\arcsin\sqrt{C_\alpha(1-p(\psi))}.
+  \]
+  For every $\tau\ge0$ such that $p(\psi)\ge1-\tau$,
+  \[
+    1-C_\alpha\tau\le\fid{\psi}{\phi}\le F_{\mathcal G}(\psi)^2.
+  \]
+
+  \textbf{\paperref{energy-identity}{Eq.~(3.7)}: acceptance derivative and speed.}
+  Let $\rho_t$ solve the ray gradient flow on $[0,\infty)$, and put
+  $p_t=p(\rho_t)$. If $\mathrm{spec}(S)\subseteq[0,\alpha]\cup\{1\}$
+  with $0\le\alpha\le1$, then for every $t\ge0$,
+  \[
+    \begin{aligned}
+      p'_t &= \norm{\dot\rho_t}_{\rm FS}^{2}=\norm{\nabla p(\rho_t)}^2 \\
+            &\ge 16(p_t-\tfrac32\alpha)(1-p_t)
+             \ge 16(p_0-\tfrac32\alpha)(1-p_t).
+    \end{aligned}
+  \]
+  The metric speed is the limit of $d_{\rm FS}(\rho_r,\rho_t)/|r-t|$
+  as $r\to t$ within the forward time domain. At $t=0$ both the speed and
+  the derivative are taken from the right. A horizontal unit-vector lift
+  gives the speed and the acceptance derivative. The first inequality is
+  the pointwise gradient bound, and the second uses $p_0\le p_t\le1$.
+
+  \textbf{Projective flow and acceptance.}
+  Start the global projective solution of
+  \bplink{lem:flow-existence}{Lemma~3.1} at the input ray.
+  For $3\alpha/2<p_0<1$, the
+  \paperref{flow-acceptance-limit}{strict increase and convergence claim}
+  gives, for every $t\ge0$,
+  \[
+    1-p_t\ge e^{-16t}(1-p_0)>0,
+    \qquad p_t<1,
+    \qquad \lim_{t\to\infty}p_t=1,
+  \]
+  and $p_s<p_t$ whenever $0\le s<t$. The upper derivative bound
+  $p'_t\le16(1-p_t)$ gives the exponential estimate.
+  \paperref{energy-identity}{Eq.~(3.7)} then makes $p'_t$ positive.
+  Monotonicity and boundedness give a limit. A limit below $1$ would give
+  a uniform positive lower bound on $p'_t$, contradicting boundedness.
+  The limit is proved for real forward time.
+
+  \textbf{Path length and certainty limit.}
+  The \paperref{flow-ray-limit}{trajectory convergence claim}
+  holds for every such forward projective solution. Put
+  $c=3\alpha/2$ and $V(p)=\tfrac12\arcsin\sqrt{(1-p)/(1-c)}$.
+  For $0\le s\le t$, Lean proves
+  \[
+    d_{\mathrm{FS}}(\psi_s,\psi_t)
+    \le \int_s^t \norm{\nabla p(\psi_r)}\,\mathrm{d}r
+    \le V(p_s)-V(p_t)\le V(p_s).
+  \]
+  A horizontal lift and the partition estimate for angles give the first
+  inequality. The chain rule and the fundamental theorem of calculus for
+  $V(p_t)$ express the manuscript's change of variables and evaluation of
+  the integral; Eq.~(3.7) gives the second inequality.
+  Since $p_s\to1$ and $V(1)=0$, the trajectory is Cauchy as real time tends
+  to infinity. Completeness gives a limiting ray $\psi_\infty$.
+  Continuity of acceptance gives $p(\psi_\infty)=1$, and continuity of
+  distance gives $d_{\mathrm{FS}}(\psi_s,\psi_\infty)\le V(p_s)$.
+
+  \textbf{Angular and linear fidelity bounds.}
+  Choose a normalized representative $\phi$ of the limiting certainty ray.
+  Its distance from the initial ray equals
+  $\arccos|\langle\psi,\phi\rangle|$, giving the angular witness bound.
+  The supremum defining fidelity is at least this witness's absolute
+  overlap, so its arccosine is at most the witness angle.
+  The manuscript estimate
+  \[
+    \cos^2\!\left(\tfrac12\arcsin\sqrt{x}\right)
+    =\tfrac12\left(1+\sqrt{1-x}\right)\ge1-x
+    \quad(0\le x\le1)
+  \]
+  gives the linear bound for the same $\phi$, independently of $\tau$.
+  The squared witness overlap is at most squared fidelity.
+  If $p(\psi)=1$, take $\phi=\psi$. If $p(\psi)\le3\alpha/2$, the
+  angular hypothesis is false and the linear lower bound is nonpositive,
+  so any member of the standing nonempty certainty set suffices.
+\end{theorem}
+\leanproof{thm:bound-fidelity-gradient-flow}
+
+\begin{theorem}[Linear fidelity bound from the spectral gap]\label{thm:gradient-flow-intro}
+  \lean{GaussianTesting.testing_fidelity_of_threeCopy_spectrum, GaussianTesting.RobustnessBounds.linear_fidelity}
+  \leanok
+  \uses{thm:bound-fidelity-gradient-flow}
+  \noderef{r1-2}{Theorem~1.2}\par
+  Under the spectral hypothesis of
+  \bplink{thm:bound-fidelity-gradient-flow}{Theorem~3.4} on the completed
+  Hilbert tensor cube, for every unit $\psi$ and $\tau\ge0$,
+  \[
+    p(\psi)\ge1-\tau\quad\Longrightarrow\quad
+    F_{\mathcal G}(\psi)^2\ge1-C_\alpha\tau .
+  \]
+  Apply the linear bound of \paperref{r3-4}{Theorem~3.4} to its comparison
+  state $\phi$, then bound its squared overlap by the squared class fidelity.
+\end{theorem}
+\leanproof{thm:gradient-flow-intro}
+
+\chapter{The Kac bound}\label{sec:kac}
+
+The Kac estimate applies to every strongly continuous unitary representation
+of $\mathrm{SO}(3)$. Compact-group decomposition reduces it to the
+finite-dimensional irreducible calculation, as in the manuscript.
+
+\begin{lemma}[Kac preliminaries]\label{prelim:kac}
+  \lean{GaussianTesting.SO3.SphereAmbient, GaussianTesting.SO3.Sphere, GaussianTesting.SO3.sphereSurfaceMeasure, GaussianTesting.SO3.sphereMeasure, GaussianTesting.SO3.sphereMeasure_univ, GaussianTesting.SO3.rotationEquiv, GaussianTesting.SO3.rotationEquiv_apply, GaussianTesting.SO3.sphereRotation, GaussianTesting.SO3.sphereRotation_one, GaussianTesting.SO3.sphereRotation_mul, GaussianTesting.SO3.continuous_sphereRotation, GaussianTesting.SO3.sphereRotation_surfaceMeasurePreserving, GaussianTesting.SO3.sphereRotation_measurePreserving, GaussianTesting.SO3.SphereSpace, GaussianTesting.SO3.sphereRotationAction, GaussianTesting.SO3.sphereRotationAction_coeFn, GaussianTesting.SO3.sphereRotationAction_mul, GaussianTesting.SO3.sphereRepresentation, GaussianTesting.SO3.continuous_sphereRepresentation_orbit, GaussianTesting.SO3.axisCircleAverage_eq_fixedProjection, GaussianTesting.SO3.axisCircleAverageCLM_eq_fixedProjection, GaussianTesting.SO3.sphereAxisContinuousAverage_apply, GaussianTesting.SO3.sphereContinuousTransition_apply, GaussianTesting.SO3.sphereContinuousToLp_denseRange, GaussianTesting.SO3.sphereKacTransition_apply, GaussianTesting.SO3.sphereKacTransition_eq_kacAverage, GaussianTesting.SO3.sphereKacTransition_continuous, GaussianTesting.SO3.sphereKacTransition_unique}
+  \leanok
+  \noderef{sphere-action}{Section~4, natural sphere action};
+  \noderef{projections-invariant}{axis-invariant projections};
+  \noderef{kac-operator}{Eq.~(4.1) and the following sphere specialization}\par
+  These preliminaries supply the spherical realization needed for the precise
+  Kac spectral-gap calculation in \paperref{r4-1}{Theorem~4.1}.
+  The general representation bound is already checked independently.
+
+  Let $S^2=\{x\in\R^3:\norm{x}=1\}$. If $\sigma$ is Euclidean surface
+  measure, put $\mu=\sigma(S^2)^{-1}\sigma$. The mass $\sigma(S^2)$ is
+  finite and nonzero, so $\mu(S^2)=1$. The point action $x\mapsto gx$ for
+  $g\in\mathrm{SO}(3)$ preserves $\sigma$ and $\mu$ and is jointly continuous.
+  On the complex Hilbert space $L^2(S^2,\mu)$, inverse pullback defines
+  \[
+    (\pi(g)f)(x)=f(g^{-1}x)\quad\text{almost everywhere}.
+  \]
+  Each $\pi(g)$ is a complex linear isometric equivalence, and
+  $\pi(gh)=\pi(g)\pi(h)$. For every $f\in L^2(S^2,\mu)$,
+  the map $g\mapsto\pi(g)f$ is continuous in the $L^2$ norm.
+
+  The surface measure is obtained from Euclidean volume by radial cones.
+  Rotations preserve these cones and volume, giving measure invariance.
+  Pullback and its inverse give the unitary operators and their multiplication
+  law. Continuous variation of the point maps, together with continuity of
+  composition in $L^2$ for measure-preserving maps, proves strong continuity.
+  For any strongly continuous unitary representation, let $R_a(\theta)$
+  denote rotation about coordinate axis $a$. Then
+  \[
+    \Pi_a v=\frac1{2\pi}\int_0^{2\pi}\pi(R_a(\theta))v\,d\theta.
+  \]
+  Periodicity makes the vector-valued integral invariant under the axis
+  subgroup, and its inner product with every fixed vector agrees with that
+  of $v$, characterizing the orthogonal projection.
+
+  Consequently, on the sphere the average of these three projections is
+  the uniform axis/angle Kac transition. For continuous observables,
+  \[
+    (Kf)(x)=\frac13\sum_{a=1}^3\frac1{2\pi}
+      \int_0^{2\pi}f(R_a(\theta)x)\,d\theta.
+  \]
+  Reflection of the full-period integral changes inverse pullback to this
+  forward-rotation formula. Evaluation and the embedding of continuous
+  observables into $L^2$ commute with the integrals. Density then identifies
+  the unique bounded extension, giving $K=T_\pi$ on all of $L^2(S^2,\mu)$.
+  The fixed-space characterization and exact spherical gap are proved as
+  part of Theorem~4.1 below.
+\end{lemma}
+\leanproof{prelim:kac}
+
+\begin{theorem}[Spectral gap for the Kac walk]\label{thm:kac-walk}
+  \lean{GaussianTesting.SO3.kacAverage_spectrum_subset, GaussianTesting.kacT_gap, GaussianTesting.UnitaryRepresentation.groupKacAverage_eq_self_iff, GaussianTesting.SO3.kacAverage_eq_self_iff_invariant, GaussianTesting.SO3.sphereRotation_transitive, GaussianTesting.SO3.sphereRepresentation_invariant_iff_constant, GaussianTesting.SO3.sphereKacTransition_eq_self_iff_constant, GaussianTesting.SO3.sphereKacTransition_eq_self_iff_ae_constant, GaussianTesting.SO3.sphereKacTransition_fixedSpace, GaussianTesting.SO3.sphereMeanZeroKac_norm_le, GaussianTesting.SO3.zonalFourPolynomial_isHomogeneous, GaussianTesting.SO3.zonalFourPolynomial_laplacian, GaussianTesting.SO3.sphereZonalFour_eq_polynomial, GaussianTesting.SO3.sphereAxisContinuousAverage_zonalFour, GaussianTesting.SO3.sphereKacTransition_spinFour, GaussianTesting.SO3.sphereSpinFour_toLp_ne_zero, GaussianTesting.SO3.sphereMeanZeroKac_norm_eq, GaussianTesting.SO3.sphereMeanZeroKac_spectrum_subset, GaussianTesting.SO3.sphereMeanZeroKac_isGreatest_spectrum, GaussianTesting.SO3.sphereKac_spectralGap, GaussianTesting.spinOverlap, GaussianTesting.alternating_choose_sq_sum, GaussianTesting.spinOverlap_odd, GaussianTesting.spinOverlap_even, GaussianTesting.centralOverlap_succ, GaussianTesting.centralOverlap_strictAnti, GaussianTesting.spinKacMaximum, GaussianTesting.spinKacMaximum_odd, GaussianTesting.spinKacMaximum_two, GaussianTesting.spinKacMaximum_four, GaussianTesting.spinKacMaximum_lt_of_six_le, GaussianTesting.threeVectorGram_charpoly_eval, GaussianTesting.threeVectorGram_spectrum, GaussianTesting.AngularMomentum.nonempty_axisKernelVectors_of_integer_spin, GaussianTesting.AngularMomentum.kacT_mem_spectrum_iff_of_integer_spin, GaussianTesting.AngularMomentum.kacT_isGreatest_eigenvalue_of_integer_spin, GaussianTesting.AngularMomentum.kacT_eigenvalue_lt_of_six_le, GaussianTesting.AngularMomentum.kacT_quadratic_le_of_integer_spin}
+  \leanok
+  \uses{prelim:kac}
+  \noderef{r4-1}{Theorem~4.1}\par
+  The Kac transition operator on $L^2(S^2)$ has spectral gap $5/12$.
+  For a strongly continuous unitary representation of $\mathrm{SO}(3)$,
+  the average $T$ of the three \paperref{projections-invariant}{axis-invariant projections}
+  has spectrum contained in $[0,7/12]\cup\{1\}$.
+
+  The spectral inclusion holds for arbitrary strongly continuous
+  unitary representations, without a separability assumption. Haar averaging
+  gives nonzero compact commuting operators; their eigenspaces and the
+  orthogonal-complement argument prove a dense span of finite-dimensional
+  irreducible invariant subspaces. On finite invariant subspaces, differentiating
+  the axis actions gives Hermitian angular-momentum generators with the
+  $\mathfrak{su}(2)$ commutators and the same fixed-space kernels.
+  The irreducible calculation follows the manuscript's exact Gram spectrum.
+  A normalized weight-string basis realizes the integer-spin coordinates.
+  Each axis kernel is a line, and phases are chosen so that its three unit
+  vectors have common overlap
+  \[
+    a_j=2^{-j}\sum_{k=0}^j(-1)^k\binom jk^2
+      =\begin{cases}0&j\text{ odd},\\
+        (-1)^{j/2}2^{-j}\binom j{j/2}&j\text{ even}.
+        \end{cases}
+  \]
+  The middle coefficient of $(1-X)^j(1+X)^j=(1-X^2)^j$ proves this identity.
+  The Gram matrix has characteristic polynomial
+  $(z-(1+2a_j))(z-(1-a_j))^2$. The nonzero spectral values of the projection
+  average are exactly $(1+2a_j)/3$ and $(1-a_j)/3$, and its largest eigenvalue
+  is their maximum $\lambda_j$. The checked cases are $\lambda_2=1/2$ and
+  $\lambda_4=7/12$; the central-binomial recurrence gives
+  $\lambda_j<7/12$ for all $j\ge6$. The public gap theorem derives its
+  quadratic-form bound from this exact maximum, rather than a separate
+  sufficient Gram estimate.
+  Hence $\operatorname{Re}\langle v,(T-I)(T-\tfrac7{12}I)v\rangle\ge0$.
+  The projections commute with restriction, so continuity passes this
+  uniform bound to the whole Hilbert space and gives the asserted spectrum.
+
+  The draft works with the \paperref{kac-operator}{Kac averaging operator (Eq.~(4.1))}
+  on axis-invariant spaces of a strongly continuous $\mathrm{SO}(3)$
+  representation. In the manuscript's Gram calculation the largest
+  nontrivial eigenvalue $7/12$ occurs at spin $j=4$.
+  The normalized sphere measure, its strongly continuous unitary action,
+  and the identification of the projection average with the uniform circle
+  Kac transition are checked in \bplink{prelim:kac}{Kac preliminaries}.
+
+  \textbf{The spherical fixed space.} A vector fixed by the average
+  of the three projections lies in all three axis-fixed spaces: the norm
+  inequalities force each projected vector to have the original norm.
+  Coordinate-plane rotations generate $\mathrm{SO}(3)$, so this is precisely
+  the invariant space of the full rotation action.
+
+  Rotations act transitively on $S^2$; two coordinate-plane rotations take
+  any unit vector to the first coordinate vector. Haar averaging a continuous
+  observable therefore gives a constant function, by left invariance of
+  Haar measure. Vector-valued Haar averaging is a bounded operator on $L^2$.
+  Density of continuous observables and closedness of the span of $1$ show
+  that its image lies in that span. An invariant vector equals its own
+  average, and constants are invariant. Thus
+  \[
+    \ker(K-I)=\C\,1,
+    \qquad Kf=f\ \Longleftrightarrow\ f\text{ is constant almost everywhere}.
+  \]
+  This identifies the trivial component in the manuscript's proof.
+
+  \textbf{The bound away from constants.} Restrict the representation to
+  $(\C\,1)^\perp$. Each finite-dimensional invariant subspace there has no
+  eigenvalue $1$, by the fixed-space characterization. Its spectrum is thus
+  contained in $[0,7/12]$, and positivity gives operator norm at most $7/12$.
+  The dense span of finite invariant subspaces passes this bound to the whole
+  orthogonal complement.
+
+  \textbf{Spin-four attainment.} The three axial functions are realized as
+  \[
+    h_a(x)=P_4(x_a)=\frac{35x_a^4-30x_a^2+3}{8}.
+  \]
+  Their ambient extensions
+  $H_a(x)=(35x_a^4-30x_a^2r^2+3r^4)/8$, where $r^2=\sum_i x_i^2$,
+  are homogeneous degree-four polynomials with zero polynomial Laplacian.
+  Circle integration gives
+  \[
+    \Pi_b h_a=\begin{cases}h_b,&a=b,\\ \tfrac38 h_b,&a\ne b.\end{cases}
+  \]
+  This is the manuscript's $j=4$ calculation with $a_4=3/8$.
+  Consequently $h=h_1+h_2+h_3$ satisfies $Kh=(7/12)h$.
+  It has value $7/4$ at a coordinate pole, and normalized sphere measure
+  has full support, so it is a nonzero $L^2$ vector. Symmetry and its
+  eigenvalue different from $1$ place it in $(\C\,1)^\perp$.
+  Thus the restricted operator has norm and largest spectral value exactly
+  $7/12$, giving the spectral gap $1-7/12=5/12$.
+\end{theorem}
+\leanproof{thm:kac-walk}
+
+\chapter{Testing fermionic Gaussian states}\label{sec:fermions}
+
+The model is $H=\mathrm{EuclideanSpace}\ \C\ (\mathrm{Fin}\ m\to\mathrm{Bool})$,
+with Jordan--Wigner Majoranas $c_a$. A vector satisfies \texttt{IsGaussian} if
+it is obtained from an occupation basis vector, up to phase, by a finite product
+of the unitaries $\alpha I+\beta c_a c_b$, where $a\ne b$ and
+$\alpha^2+\beta^2=1$ for real $\alpha,\beta$. This includes both parity sectors.
+The unitary implementers of arbitrary $\mathrm{SO}(2m)$ Majorana rotations
+are constructed, and their even and odd orbits are proved to give exactly this class.
+All reusable background is collected in the preliminaries node below.
+The test construction, the three numbered results, and Figure~1(a) retain
+their own nodes. Calculations proved for these results stay with those nodes,
+even when their Lean declarations share a file with background material.
+
+\begin{lemma}[Fermionic Gaussian preliminaries]\label{prelim:fermions}
+  \lean{GaussianTesting.HF, GaussianTesting.maj, GaussianTesting.maj_isSymmetric, GaussianTesting.maj_sq, GaussianTesting.maj_anticomm, GaussianTesting.parityOp, GaussianTesting.parityOp_sq, GaussianTesting.parityOp_anticomm_maj, GaussianTesting.nOp, GaussianTesting.nOp_apply, GaussianTesting.givensU, GaussianTesting.norm_givensU, GaussianTesting.IsGaussian, GaussianTesting.maj3₁, GaussianTesting.maj3₂, GaussianTesting.maj3₃, GaussianTesting.exists_gaussianImplementer, GaussianTesting.gaussianImplementer_majorana, GaussianTesting.ImplementsMajoranaRotation.unique_phase, GaussianTesting.gaussianUnitary_parity, GaussianTesting.mem_fermionicGaussianOrbit_iff, GaussianTesting.fermionicGaussianStates_eq_isGaussian, GaussianTesting.fermionAnnihilation, GaussianTesting.fermionCreation, GaussianTesting.fermionCreation_adjoint, GaussianTesting.fermionNumber_apply, GaussianTesting.majorana_pair_eq_two_fermionNumber_sub_id, GaussianTesting.fermionCreation_add_annihilation, GaussianTesting.imaginary_fermionCreation_sub_annihilation, GaussianTesting.exists_specialOrthogonal_skewNormalForm, GaussianTesting.sum_sq_specialOrthogonal_congruence, GaussianTesting.fermionVacuum, GaussianTesting.eq_smul_fermionVacuum_of_annihilation_eq_zero, GaussianTesting.fermionCreationWord_occupiedModes, GaussianTesting.fermionExteriorEquiv, GaussianTesting.fermionSecondQuantization, GaussianTesting.fermionSecondQuantization_exteriorPower, GaussianTesting.continuous_fermionSecondQuantization_orbit, GaussianTesting.fermionTripleEquiv, GaussianTesting.fermionTripleEquiv_majorana, GaussianTesting.fermionCopyModeRotation, GaussianTesting.fermionCopyRepresentation, GaussianTesting.continuous_fermionCopyRepresentation_orbit, GaussianTesting.fermionCopyRepresentation_majorana, GaussianTesting.orderedMajoranaProduct, GaussianTesting.parityOp_eq_majoranaProduct, GaussianTesting.fermionPairOccupationEquiv, GaussianTesting.fermionPairEquiv, GaussianTesting.maj2₁, GaussianTesting.maj2₂, GaussianTesting.fermionPairMajorana, GaussianTesting.fermionPairEquiv_majorana, GaussianTesting.fermionPairMajorana_isSymmetric, GaussianTesting.fermionPairMajorana_sq, GaussianTesting.fermionPairMajorana_anticomm, GaussianTesting.fermionPairL, GaussianTesting.fermionPairL_eq, GaussianTesting.ker_fermionPairL, GaussianTesting.fermionPairGenerator, GaussianTesting.ker_fermionPairGenerator, GaussianTesting.fermionPairModeRotation, GaussianTesting.fermionPairRepresentation, GaussianTesting.continuous_fermionPairRepresentation_orbit, GaussianTesting.fermionPairRepresentation_majorana, GaussianTesting.fermionPairCircle, GaussianTesting.fermionPairRepresentation_hasDerivAt, GaussianTesting.fermionPairCircle_fixed_iff, GaussianTesting.fermionPairRepresentation_fixed_iff, GaussianTesting.fermionPairRepresentation_fixedSubspace, GaussianTesting.PF_eq_pairRotation_fixedProjection}
+  \leanok
+  \noderef{fermion-majoranas}{Section~5, Gaussian preliminaries}\par
+  This node collects the standard background required by the fermionic results:
+  occupation and exterior coordinates, creation and annihilation operators,
+  \paperref{fermion-majoranas}{Majoranas and their Clifford relations},
+  \paperref{fermion-number}{number and occupation-sign operators},
+  \paperref{fermion-parity}{parity}, the
+  \paperref{fermion-action}{Majorana rotation action (Eq.~(5.1))}, and the
+  \paperref{fermion-gaussian}{even and odd Gaussian orbits}.
+  It includes the \paperref{fermion-skew-normal-form}{real antisymmetric block
+  normal form} used by Lemma~5.1 and the
+  \paperref{fermion-copy-action}{second-quantized copy action} used by Theorem~5.2.
+
+  \textbf{Checked.} The occupation space has creation/annihilation operators
+  with the prescribed adjoint relation and action. They reconstruct the
+  Jordan--Wigner Majoranas, which are symmetric, square to the identity,
+  and anticommute. The number operator $N_k=a_k^\dagger a_k$ is diagonal,
+  and $\mathrm{i}c_Xc_Y=2N_k-I$. Parity is the occupation sign, an involution
+  anticommuting with every Majorana. Every $R\in\mathrm{SO}(2m)$ has a unitary
+  implementer with the manuscript's column action, unique up to phase.
+  The implementers preserve parity; their two parity orbits give exactly
+  \texttt{IsGaussian}, independently of Lemma~5.1.
+  General real antisymmetric matrices have a special orthogonal paired
+  normal form, and orthogonal congruence preserves their squared norm.
+
+  The common annihilation kernel is the vacuum line. Ordered creation words
+  give the occupation basis and identify it with the ordered exterior basis.
+  For real special orthogonal mode rotations, fixing the vacuum removes the
+  implementer's phase ambiguity and gives a genuine unitary representation.
+  Its action is proved equal to the exterior-algebra map, including its
+  restriction to each exterior-power sector: this is the
+  \paperref{fermion-second-quantization}{second quantization} required here.
+  The creation-word formula proves strong continuity.
+  Applying this construction to $R\otimes I_m$ and transporting through the
+  unitary occupation identification $H_{3m}\cong H_m^{\otimes3}$ gives the
+  actual $\mathrm{SO}(3)$ copy action. Its Majoranas are exactly the
+  \paperref{fermion-two-copy-majoranas}{parity-string operators (Eq.~(5.4))}, now checked
+  on the three copies used in Theorem~5.2. All mode counts, including zero,
+  and both parity sectors are covered.
+
+  All background required by Lemma~5.1 and Theorem~5.2 is checked.
+  Test-specific generator, fixed-space, and Kac calculations remain in
+  Theorem~5.2's node; covariance saturation remains in Lemma~5.1's node.
+
+  The \paperref{fermion-parity}{parity identity}
+$\Pi=(-i)^m c_1\cdots c_{2m}$ is checked with the Majoranas ordered by
+mode and X before Y. Consecutive pairs act by $i$ times the local parity
+sign, so their product is $i^m\Pi$, including the zero-mode case.
+
+  The \paperref{fermion-two-copy-majoranas}{two-copy occupation identification (Eq.~(5.4))}
+$\mathcal H_{2m}\simeq\mathcal H_m^{\otimes2}$ sends the Jordan--Wigner
+Majoranas to $c_j\otimes I$ and $\Pi\otimes c_j$. Splitting the prefix signs
+by copy proves the formula. Transport through this actual unitary proves
+Hermiticity and the canonical anticommutation relations.
+
+  The explanatory \paperref{fermion-rotation}{two-copy generator identity (Eq.~(5.5))}
+$L=i\sum_j c_{j,1}c_{j,2}=-i(\Pi\otimes I)\Lambda$ and
+$\ker L=\ker\Lambda$ are checked directly. The actual second-quantized
+$\mathrm{SO}(2)$ action $\Gamma_\wedge(R\otimes I_m)$ has usual-angle
+derivative $iL/2$: Majorana covariance determines its commutators, and the
+fixed vacuum removes the scalar ambiguity. The one-parameter fixed-space
+theorem and coordinate-plane generation give
+$\Gamma_\wedge(R\otimes I_m)v=v$ for every $R\in\mathrm{SO}(2)$ if and only
+if $\Lambda v=0$. Thus $P_F$ is exactly the projection onto this invariant
+space. The three-copy axis identities and $S=T_\pi$ remain in Theorem~5.2.
+
+  \textbf{Unused background.} The broader complex $\mathrm{SU}(m)$ action
+  is not needed by the direct three-copy argument and is not asserted here.
+  The cited \paperref{fermion-kernel-span}{Gaussian-square span of the kernel}
+  and symmetric support are checked in the
+  \paperref{span-optimality}{span and optimality node} below.
+  The \paperref{copy-symmetry}{full many-copy commutant}, Spin double-cover
+  construction, and quadratic-ground-state equivalence are likewise outside
+  this node's required background.
+\end{lemma}
+\leanproof{prelim:fermions}
+
+\begin{definition}[Fermionic test projection]\label{def:PF}
+  \lean{GaussianTesting.lambdaF, GaussianTesting.lambdaF_eq_ladder, GaussianTesting.PF, GaussianTesting.lambdaF_isSymmetric, GaussianTesting.lambdaF_swap_comm, GaussianTesting.PF_isAcceptanceProjection, GaussianTesting.ImplementsMajoranaRotation.lambdaF_conjugate, GaussianTesting.ImplementsMajoranaRotation.PF_comm, GaussianTesting.ImplementsMajoranaRotation.accProb_PF}
+  \leanok
+  \uses{def:acceptance, prelim:fermions}
+  \noderef{lambda-f}{Section~5.1, fermionic kernel projection}\par
+  The \paperref{lambda-f}{fermionic kernel projection} is $P_F$, the orthogonal
+  projection onto $\ker\Lambda_F$, where
+  \[
+    \Lambda_F=\sum_{a=1}^{2m}c_a\otimes c_a
+      =2\sum_{k=1}^m(a_k^\dagger\otimes a_k+a_k\otimes a_k^\dagger).
+  \]
+  Both expressions, symmetry, swap commutation, and the acceptance-projection
+  properties are checked in the manuscript's occupation coordinates.
+  Equation~(5.2), the \paperref{fermion-invariance}{Gaussian conjugation identity (Eq.~(5.2))},
+  is proved on the full two-copy space for every implementer of every
+  $R\in\mathrm{SO}(2m)$ by expanding the Majorana action and using the
+  orthogonality of $R$. The kernel projection commutes with the action, so
+  the acceptance probability is invariant under Gaussian unitaries.
+\end{definition}
+
+\begin{lemma}[Fermionic states accepted with certainty]\label{lem:exact-fermions}
+  \lean{GaussianTesting.fermionicGaussian_iff_lambdaF, GaussianTesting.fermionicGaussian_iff_accProb, GaussianTesting.fermionicGaussian_lambdaF_eq_zero, GaussianTesting.fermionicGaussian_of_lambdaF_eq_zero, GaussianTesting.norm_lambdaF_tp2, GaussianTesting.sum_sq_covMat_of_lambdaF_eq_zero, GaussianTesting.ImplementsMajoranaRotation.covMat_symm, GaussianTesting.ImplementsMajoranaRotation.sum_sq_covMat_symm, GaussianTesting.abs_covMat_pair_le_one, GaussianTesting.covMat_pair_signs_of_sum_eq, GaussianTesting.nOp_eigen_of_expectation, GaussianTesting.joint_eigen_basis, GaussianTesting.exists_phase_basis_of_covMat_skewBlockMatrix}
+  \leanok
+  \uses{def:PF, prelim:fermions}
+  \noderef{r5-1}{Lemma~5.1}\par
+  A pure fermionic state is Gaussian if and only if
+  $\Lambda_F\psi^{\otimes2}=0$, equivalently if and only if $p(\psi)=1$.
+  The Gaussian class is the independently defined union of the even and odd
+  $\mathrm{SO}(2m)$ implementer orbits. There is no input parity assumption,
+  and zero modes are included.
+
+  \textbf{Checked proof, following the manuscript.} Gaussian conjugation
+  invariance and $\Lambda_F\ket{x}^{\otimes2}=0$ give the forward implication.
+  The kernel projection identifies the kernel condition with perfect acceptance.
+  For the converse, the \paperref{fermion-covariance}{covariance norm identity (Eq.~(5.3))}
+  gives $\|\Gamma_\psi\|_{\mathrm{HS}}^2=2m$. The general real antisymmetric
+  normal form supplies $R\in\mathrm{SO}(2m)$ with canonical blocks
+  $\bigl(\begin{smallmatrix}0&\nu_k\\-\nu_k&0\end{smallmatrix}\bigr)$.
+  Its Gaussian implementer transforms the covariance by
+  $\Gamma_{U_R^\dagger\psi}=R^T\Gamma_\psi R$ and preserves this norm.
+  Each $\nu_k$ is the expectation of $2N_k-I$, so $|\nu_k|\le1$.
+  The norm equality forces every $\nu_k=\pm1$. Saturation makes the rotated
+  state a joint occupation eigenvector, hence an occupation basis vector up
+  to phase. Transporting back proves Gaussianity.
+
+  These calculations supply the fermionic covariance-saturation argument
+  behind the introductory \paperref{covariance-criterion}{covariance criterion}. These covariance
+  and saturation calculations are steps of Lemma~5.1.
+  The equivalent coordinate interfaces \texttt{isGaussian\_iff} and
+  \texttt{isGaussian\_iff\_accProb} use this same proof. No obligations remain for this
+  lemma in the manuscript's occupation presentation.
+\end{lemma}
+\leanproof{lem:exact-fermions}
+
+\begin{theorem}[Fidelity bound for the fermionic test]\label{thm:main-fermions}
+  \lean{GaussianTesting.fermionic_fidelity_witness, GaussianTesting.fermionic_fidelity, GaussianTesting.fermionicGaussianStates_eq_certaintyStates, GaussianTesting.Lgen12_eq, GaussianTesting.Lgen23_eq, GaussianTesting.Lgen13_eq, GaussianTesting.ker_Lgen12, GaussianTesting.ker_Lgen23, GaussianTesting.ker_Lgen13, GaussianTesting.fermion_copyRepresentation_axis_derivatives, GaussianTesting.fermion_copy_axis_fixed, GaussianTesting.fermion_Sop_eq_kacAverage, GaussianTesting.fermionic_spectrum_subset, GaussianTesting.finite_robustness_of_spectrum}
+  \leanok
+  \uses{thm:bound-fidelity-gradient-flow, thm:kac-walk, def:PF, lem:exact-fermions, prelim:flow, prelim:fermions}
+  \noderef{r5-2}{Theorem~5.2}\par
+  If $p(\psi)\ge1-\tau$ for a pure fermionic state, its squared fidelity
+  with the independent even/odd Gaussian orbit union is at least $1-8\tau$.
+  Only unit norm and this acceptance hypothesis are required; $\tau\ge0$
+  follows from $p(\psi)\le1$.
+
+  \textbf{Checked proof, following the manuscript.} Use the actual
+  second-quantized action $\pi(R)=\Gamma_\wedge(R\otimes I_m)$ on three copies.
+  Its Majorana covariance and fixed vacuum determine the three axis
+  derivatives. For the usual right-handed angles these are
+  $\mathrm{i}L_{23}/2$, $-\mathrm{i}L_{13}/2$, and $\mathrm{i}L_{12}/2$.
+  The \paperref{fermion-rotation}{parity-string generator identities (Eq.~(5.5))}
+  give $\ker L_{ab}=\ker\Lambda_{ab}$. A vector is fixed by an entire
+  one-parameter axis subgroup exactly when its derivative generator kills it.
+  Hence the \paperref{projections-invariant}{axis-invariant projections}
+  are precisely $P_{23},P_{13},P_{12}$, proving $S=T_\pi$.
+
+  \paperref{r4-1}{Theorem~4.1}, applied to this strongly continuous unitary
+  representation, gives $\operatorname{spec}_{\C}(S)\subseteq[0,7/12]\cup\{1\}$.
+  The finite occupation tensor coordinates are explicitly identified with
+  the completed Hilbert tensor products, preserving acceptance, pair
+  projections, the three-copy average, and its spectrum.
+  The projective-flow proof of \paperref{r3-4}{Theorem~3.4} therefore gives a
+  certainty witness with constant $C_{7/12}=8$.
+  \paperref{r5-1}{Lemma~5.1} identifies its class, and the
+  \paperref{fidelity}{supremum in Eq.~(3.2)} gives the stated squared-fidelity
+  bound. The public theorem also exports the Gaussian witness.
+  All mode counts and both parity sectors are covered.
+\end{theorem}
+\leanproof{thm:main-fermions}
+
+\begin{corollary}[Testing fermionic Gaussian states]\label{cor:fermion-testing}
+  \lean{GaussianTesting.fermionic_testing, GaussianTesting.fermionicTestProtocol, GaussianTesting.fermionic_acceptance_le_of_far, GaussianTesting.fermionicTestProtocol_acceptance, GaussianTesting.fermionicTestProtocol_rejection, GaussianTesting.fermionicTestCopies, GaussianTesting.fermionicTestCopies_le_rate}
+  \uses{thm:main-fermions, lem:exact-fermions}
+  \noderef{r5-3}{Corollary~5.3}\par
+  \leanok
+  For $\varepsilon,\delta\in(0,1)$ there is a test on pairs of copies using
+  $O(\varepsilon^{-2}\log(1/\delta))$ copies of the input. It always accepts
+  a fermionic Gaussian state and rejects with probability at least $1-\delta$
+  if its squared Gaussian fidelity is at most $1-\varepsilon^2$.
+
+  The protocol repeats the two-outcome measurement with accepting projection
+  $P_F$ on fresh pairs, using the product Bernoulli law of its Born
+  acceptance probability. It accepts precisely when all rounds accept,
+  with probability $p(\psi)^n$.
+  For the independent Gaussian orbit class, \paperref{r5-1}{Lemma~5.1}
+  gives perfect completeness. Under the squared-fidelity promise,
+  \paperref{r5-2}{Theorem~5.2} gives $p(\psi)\le1-\varepsilon^2/8$.
+  The manuscript's exponential estimate gives acceptance at most $\delta$
+  and rejection at least $1-\delta$ for
+  $n=\lceil(8/\varepsilon^2)\log(1/\delta)\rceil$ rounds.
+
+  The exact copy count is $2n\le16\varepsilon^{-2}\log(1/\delta)+2$
+  throughout the parameter range. For $\delta\le e^{-1}$ it is at most
+  $32\varepsilon^{-2}\log(1/\delta)$, giving an explicit constant for the
+  asymptotic rate, independent of the number of modes.
+  The Bell-readout implementation is checked in the separate Figure~1(a) node.
+\end{corollary}
+\leanproof{cor:fermion-testing}
+
+\chapter{Testing bosonic Gaussian states}\label{sec:bosons}
+
+The public Gaussian certainty and robustness theorems use actual Schrödinger
+wavefunctions in $L^2(\R^m)$ and the manuscript's independent state classes:
+centered symplectic images of the vacuum, displaced symplectic images, and
+displaced vacua. Their accepting projections, completed tensor products,
+reduced density operators, and characteristic functions are constructed directly.
+Write $p_0$, $q$, and $p$ for the physical two-copy mean-zero, two-copy coherent,
+and four-copy acceptance probabilities.
+
+The proved oscillator basis connects the physical pair operators to their
+$\ell^2$ occupation-coordinate realizations, which supply the finite-particle
+calculations used in these proofs.
+
+\begin{lemma}[Bosonic Gaussian preliminaries]\label{prelim:bosons}
+  \lean{GaussianTesting.FockB, GaussianTesting.WaveSpace, GaussianTesting.fockNumberPolynomial, GaussianTesting.waveTensorEquiv, GaussianTesting.waveVacuum_norm, GaussianTesting.waveVacuum_annihilation, GaussianTesting.waveParity_vacuum, GaussianTesting.weylOperator_coeFn, GaussianTesting.weylOperator_mul, GaussianTesting.weylOperator_adjoint, GaussianTesting.continuous_weylOperator_apply, GaussianTesting.waveCharacteristic_basis, GaussianTesting.waveCharacteristic_zero, GaussianTesting.norm_waveCharacteristic_le_one, GaussianTesting.waveCharacteristic_neg, GaussianTesting.continuous_waveCharacteristic, GaussianTesting.HilbertDensity.IsDensityOperator.exists_normalized_gram_representation, GaussianTesting.HilbertDensity.isPositiveTraceClass_basis_iff, GaussianTesting.HilbertDensity.isDensityOperator_basis_iff, GaussianTesting.HilbertDensity.IsPositiveTraceClass.operatorTrace_basis, GaussianTesting.HilbertDensity.operatorTrace_mul_gramOp, GaussianTesting.HilbertDensity.IsPositiveTraceClass.operatorTrace_mul_comm, GaussianTesting.HilbertDensity.IsPositiveTraceClass.norm_operatorTrace_mul_le, GaussianTesting.HilbertDensity.operatorTrace_mul_reducedRight, GaussianTesting.HilbertDensity.reducedRight_basis, GaussianTesting.waveCharacteristic_rankOne, GaussianTesting.pureWaveCharacteristic_displacement, GaussianTesting.inner_waveVacuum_weylOperator, GaussianTesting.pureWaveCharacteristic_displaced_vacuum, GaussianTesting.vacuumCharacteristic_balanced, GaussianTesting.schrodingerTensorRotation_balanced_weyl, GaussianTesting.pureTensorCharacteristic_tmul, GaussianTesting.pureTensorCharacteristic_balanced_product, GaussianTesting.schrodingerCopiesAction_mul, GaussianTesting.continuous_schrodingerSpecialOrthogonalRepresentation_apply, GaussianTesting.schrodingerSpecialOrthogonalRepresentation_planeRotation, GaussianTesting.rankOne_eq_of_pureWaveCharacteristic_eq, GaussianTesting.polynomialAnnihilation_creation, GaussianTesting.inner_polynomialGaussian_creation, GaussianTesting.inner_polynomialGaussian_annihilation, GaussianTesting.finiteFockPolynomialCore_eq_top, GaussianTesting.denseRange_polynomialGaussian, GaussianTesting.schrodingerFiniteLambda_domain_dense, GaussianTesting.schrodingerLambda_domain_dense, GaussianTesting.schrodingerNumberBasis, GaussianTesting.fockSchrodingerEquiv_vacuum, GaussianTesting.polynomialCreation_schrodingerNumberPolynomial, GaussianTesting.polynomialAnnihilation_schrodingerNumberPolynomial, GaussianTesting.fockPairGraphEquiv_closedGraph, GaussianTesting.fockPairSchrodingerEquiv_P0B, GaussianTesting.fockPairSchrodingerEquiv_tpPair, GaussianTesting.schrodingerLambda_mem_kernel_iff_rotation_fixed, GaussianTesting.waveSymplecticUnitary_conjugate_weyl, GaussianTesting.pureWaveCharacteristic_symplectic, GaussianTesting.waveSymplecticUnitary_commutesWithCopyRotations, GaussianTesting.waveSymplecticUnitary_tensorP0, GaussianTesting.meanZeroGaussianWaveStates, GaussianTesting.gaussianWaveStates, GaussianTesting.coherentWaveStates, GaussianTesting.exists_symplectic_vacuum_of_pureCharacteristic_quadratic, GaussianTesting.exists_displaced_symplectic_vacuum_of_gaussian_characteristic, GaussianTesting.HilbertDensity.IsDensityOperator.exists_rankOne_of_norm_eq_one, GaussianTesting.HilbertDensity.exists_unit_tmul_of_reducedRight_eq_rankOne, GaussianTesting.waveNumberCoordinates_conj_P0, GaussianTesting.fockPairSchrodingerEquiv_ULp, GaussianTesting.fockPairSchrodingerEquiv_VLp, GaussianTesting.waveNumberCoordinates_conj_Q, GaussianTesting.HilbertDensity.positiveTrace_rankOne, GaussianTesting.HilbertDensity.isPositiveTraceClass_rankOne, GaussianTesting.HilbertDensity.isDensityOperator_rankOne_iff, GaussianTesting.HilbertDensity.rankOne_eq_iff_phase, GaussianTesting.HilbertDensity.IsDensityOperator.norm_eq_one_iff_rankOne, GaussianTesting.HilbertDensity.IsDensityOperator.idempotent_iff_rankOne, GaussianTesting.HilbertDensity.rayProjector, GaussianTesting.HilbertDensity.isDensityOperator_rayProjector, GaussianTesting.HilbertDensity.rayProjector_mk, GaussianTesting.HilbertDensity.rayProjector_injective, GaussianTesting.HilbertDensity.IsDensityOperator.existsUnique_rayProjector}
+  \noderef{boson-fock}{Section~6, Gaussian preliminaries}\par
+  \leanok
+  This node collects the background required by the Section~6 proofs: the
+  \paperref{boson-fock}{occupation and Schr\"odinger Hilbert spaces},
+  the complete number basis and finite-core ladder actions, the vacuum,
+  \paperref{weyl-action}{Weyl displacements},
+  \paperref{weyl}{characteristic functions},
+  \paperref{boson-symplectic}{symplectic Gaussian actions}, and the
+  \paperref{boson-gaussian}{Gaussian-state characterizations} used in those proofs.
+  It also contains the \paperref{density}{density, trace, and tensor-product facts} supporting
+  \paperref{r6-2}{Lemma~6.2} and the reduced-state arguments.
+
+  \textbf{Checked: Hilbert spaces, vacuum, and tensors.}
+  Actual Lebesgue $L^2(\R^m)$ and occupation-coordinate $\ell^2$ spaces are
+  constructed. Ordered creation powers specify the finite number vectors.
+  The Gaussian vacuum $v_0(x)=\pi^{-m/4}e^{-\norm x^2/2}$ is normalized,
+  annihilated by each coordinate annihilation operator, and fixed by parity.
+  Product wavefunctions give the unitary
+  $T(f\otimes g)(x,y)=f(x)g(y)$ from the completed tensor square to
+  $L^2(\R^{2m})$; surjectivity follows from finite-rectangle density.
+  The \paperref{unbounded-rotation}{coordinate rotations of two copies (Eq.~(6.1))}
+  are strongly continuous unitaries with the manuscript's explicit action.
+  More generally, the checked $O(t)$ action uses copy-first coordinates and
+  inverse pullback by $R^{-1}\otimes I_m$, as in Section~6.1.
+  This tensor identification does not assume completeness of the number basis.
+  Creation and annihilation satisfy their canonical commutator and are adjoints
+  on polynomial Gaussians, by Gaussian integration by parts. Ordered creation
+  powers span every polynomial Gaussian, and this span is dense in $L^2$ by
+  Fourier uniqueness. Thus the prescribed finite number-vector domain and its
+  graph-closed generator are densely defined. The commutator and adjoint
+  identities give orthogonality and factorial norms, so the normalized number
+  vectors form a complete orthonormal basis. Its coefficient map gives the
+  actual unitary Fock identification, sending zero occupation to the vacuum.
+  On two copies it intertwines the finite and graph-closed generators, their
+  kernels, and $P_{0B}$ with $P_0$. It sends completed product tensors to
+  products of the single-copy wavefunctions.
+
+  \textbf{Checked: Weyl action and elementary characteristic functions.}
+  Lean takes the manuscript's explicit action as the definition:
+  \[
+    (D_{(x,p)}f)(z)=e^{\mathrm{i}p^T(z-x/2)}f(z-x).
+  \]
+  Translation preserves Lebesgue measure and the multiplier has modulus one.
+  Thus $D_r$ is unitary, $D_0=I$, $D_r^*=D_{-r}$, and
+  \[
+    D_rD_s=e^{-\mathrm{i}\sigma(r,s)/2}D_{r+s},\qquad
+    \sigma((q,p),(q',p'))=q^Tp'-p^Tq'.
+  \]
+  The action $(r,f)\mapsto D_rf$ is jointly continuous in the Euclidean and
+  $L^2$ norm topologies. Translation continuity and dominated convergence
+  for modulation, bounded by $4|f|^2$, prove strong continuity.
+  For a density operator, $\chi_\rho(r)=\operatorname{Tr}(\rho D_r)$ is
+  basis independent, continuous, satisfies $\chi_\rho(0)=1$ and
+  $|\chi_\rho(r)|\le1$, and obeys
+  $\chi_\rho(-r)=\overline{\chi_\rho(r)}$.
+  The manuscript retains the equivalent unbounded-exponential notation;
+  that identification is not used or proved by this construction.
+
+  The \paperref{vacuum-characteristic}{vacuum characteristic function} is
+  $\eta(x,p)=\exp(-(\norm x^2+\norm p^2)/4)$, by the Gaussian Fourier integral.
+  It never vanishes and obeys the balanced-rotation product identity.
+  Displacement of a state by $D_a$ multiplies its characteristic function by
+  $\exp(\mathrm{i}\sigma(a,r))$. Product states have product characteristic
+  functions. The \paperref{displacement-rotation}{copy-rotation covariance (Eq.~(6.4))}
+  holds on the completed tensor square at every angle; at $\theta=\pi/4$
+  it sends $(r,s)$ to $((r-s)/\sqrt2,(r+s)/\sqrt2)$.
+  Pure-state characteristic functions determine the rank-one density operator:
+  Fourier uniqueness identifies the correlation kernels, and Fubini identifies
+  the operators. No regularity or moment hypotheses are imposed on the input.
+
+  \textbf{Checked: the Gaussian characterization used by the proofs.}
+  The physical Gaussian state sets use the manuscript's independent
+  symplectic-vacuum, displaced symplectic-vacuum, and displaced-vacuum
+  descriptions. For a unit wavefunction, a centered Gaussian characteristic
+  function implies membership in the symplectic vacuum orbit; a linear phase
+  gives its displaced version. No nondegeneracy or moment hypothesis is added.
+  Weyl relations rule out nontrivial displacement eigenvectors and force strict
+  positivity of the covariance exponent. Gaussian Fourier inversion recovers
+  the correlation kernel, then a continuous homogeneous quadratic Gaussian
+  wavefunction. A positive square root and quadratic phase give its symplectic
+  vacuum realization.
+
+  \textbf{Checked: actions on copies.}
+  For every number of modes and copies, orthogonal matrices act on the copy
+  coordinate of $L^2(\R^{t\times m})$. Inverse pullback is a unitary
+  representation, jointly continuous in the matrix and the input wavefunction.
+  Its restriction to $\mathrm{SO}(t)$ is checked, and at $t=2$ the plane
+  rotations agree with the existing $U_\theta$.
+  The closed kernel equals the subspace fixed by all copy rotations.
+  For the converse, average over one period. Polynomial Gaussian orbits lie
+  in finite-dimensional polynomial spaces, so their averages remain on the
+  finite core and have zero generator. Density and graph closure extend
+  this conclusion to every fixed vector.
+
+  \textbf{Checked: the required symplectic action.}
+  Quadratic phase multipliers, Jacobian-normalized invertible coordinate
+  changes, and Fourier transform implement symmetric shears and diagonal
+  symplectic blocks on actual $L^2$. A block factorization constructs $U_S$
+  for every real symplectic matrix and proves
+  $U_S^*D_rU_S=D_{S^{-1}r}$. Identical copies commute with every copy rotation,
+  hence preserve its fixed subspace and commute with $P_0$. This is the
+  invariance needed in the manuscript's test proofs.
+
+  \textbf{Checked: density operators and traces.}
+  On any complete complex Hilbert space, the positive trace-class criterion
+  and diagonal trace are independent of the Hilbert basis. Every density
+  operator has a normalized summable Gram representation
+  $\rho=\sum_i|g_i\rangle\langle g_i|$, obtained from $g_i=\sqrt\rho\,e_i$,
+  with $\sum_i\norm{g_i}^2=1$. For bounded $B$,
+  \[
+    \operatorname{Tr}(B\rho)=\sum_i\langle g_i,Bg_i\rangle
+      =\operatorname{Tr}(\rho B),\qquad
+    |\operatorname{Tr}(B\rho)|\le\norm B\operatorname{Tr}(\rho).
+  \]
+  These traces are absolutely convergent and independent of the Gram family.
+  Product Gram families give the actual tensor-product density operator.
+  The partial trace of a bipartite pure vector is basis independent and
+  satisfies $\operatorname{Tr}(B\rho)=\langle\Phi,(I\otimes B)\Phi\rangle$.
+  Uniformly summable Gram expectations give continuity of $\chi_\rho$.
+  A density operator of norm one is rank one: its compact Gram operator has
+  a top eigenvector, and trace one forces the residual to vanish. A unit
+  bipartite vector with rank-one reduced state has a unit tensor factorization,
+  by the observable identity and rank-one projection.
+  A vector defines a density projector exactly when its norm is one.
+  Two unit vectors define the same projector exactly when they differ by a
+  unit scalar phase. For a density operator, idempotence is equivalent to
+  being a unit-vector projector. The phase-independent ray-projector map is
+  injective, and every such pure density operator comes from a unique ray.
+
+  \textbf{Scope.} The required background stated here is checked.
+  The general Gaussian purity reduction belongs to Proposition~6.3. The
+  physical $\mathrm{SO}(3)$--Kac identification belongs to Theorem~6.4,
+  and all physical robustness applications are checked in their respective
+  theorem nodes. The three bosonic Figure~1 readouts are checked in their circuit nodes.
+  Mixed-state characteristic injectivity, metaplectic structure,
+  quadratic-Hamiltonian ground-state equivalence, exponential identifications,
+  explicit \paperref{gaussian-moments}{first- and second-moment characterizations},
+  general $U(m)$ second-quantization identification, the
+  \paperref{copy-symmetry}{full orthogonal-copy commutant duality}, and unused
+  abstract symmetric-Fock packaging are outside this node's required background.
+\end{lemma}
+\leanproof{prelim:bosons}
+
+\begin{definition}[Bosonic kernel-test projection]\label{def:P0B}
+  \lean{GaussianTesting.lambdaB, GaussianTesting.P0B, GaussianTesting.closedLambdaB_graph, GaussianTesting.closedLambdaB_eq_closure, GaussianTesting.closedLambdaB_hasCore, GaussianTesting.P0B_eq_closedLambdaB_kernelProjection, GaussianTesting.schrodingerLambda_graph, GaussianTesting.schrodingerLambda_eq_closure, GaussianTesting.schrodingerLambda_hasCore, GaussianTesting.schrodingerP0, GaussianTesting.schrodingerRotation_P0, GaussianTesting.schrodingerMeanZeroAcceptance_symplectic}
+  \leanok
+  \uses{def:acceptance, prelim:bosons}
+  \noderef{lambda-b}{Section~6.1, bosonic kernel projection}\par
+  On finite sums in the \paperref{boson-fock}{Fock occupation basis},
+  $\Lambda_B=i\sum_l(a_l\otimes a_l^\dagger-a_l^\dagger\otimes a_l)$.
+  The actual closure of its finite-core graph is the graph of a closed
+  operator. Its kernel is exactly the Hilbert direct sum of the finite particle-number
+  block kernels. Hence its orthogonal kernel projection equals the bounded
+  operator $P_{0B}$ on the completed two-copy Fock space, with
+  $\norm{P_{0B}}\le1$. The initial finite domain is a core of this closure.
+
+  On actual wavefunctions, the normalized creation powers give the prescribed
+  finite Fock graph core. The coordinate creation and annihilation formulas
+  agree with $(X_j-\partial_j)/\sqrt2$ and $(X_j+\partial_j)/\sqrt2$.
+  The closure of the graph of $\Lambda$ is single valued and has this core;
+  its kernel is closed, and its orthogonal projection is
+  \texttt{schrodingerP0}. The finite-core differential rotation identity
+  extends to the graph closure and gives $U_tP_0=P_0$ for every real $t$.
+  The actual number-basis unitary now intertwines both finite graphs, their
+  closures, and their kernel projections. This identification is proved in
+  the bosonic preliminaries.
+
+  The bounded consequences of \paperref{boson-invariance}{Gaussian invariance (Eq.~(6.2))}
+  are checked: $U_S^{\otimes2}$ preserves the closed kernel and commutes with
+  $P_0$, and $p_0(U_S\psi)=p_0(\psi)$ for every wavefunction. The separate
+  full unbounded-operator conjugation statement is not asserted here.
+\end{definition}
+
+\begin{proposition}[Mean-zero states accepted with certainty]\label{prp:mean-zero-gaussian}
+  \lean{GaussianTesting.bosonicMeanZeroGaussian_characterization, GaussianTesting.schrodingerMeanZeroAcceptance_eq_one_iff, GaussianTesting.mem_meanZeroGaussianWaveStates_iff_kernel, GaussianTesting.pureWaveCharacteristic_balanced_of_kernel, GaussianTesting.characteristic_rotation_positive, GaussianTesting.characteristic_rotation_log_parallelogram, GaussianTesting.exists_bilinear_of_continuous_parallelogram, GaussianTesting.pureWaveCharacteristic_kernel_eq_exp_quadratic, GaussianTesting.waveTensor_vacuum_mem_kernel, GaussianTesting.schrodingerTensorP0_symplectic_vacuum}
+  \uses{def:P0B}
+  \noderef{r6-1}{Proposition~6.1}\par
+  \leanok
+  For every unit physical wavefunction, the following are equivalent:
+  membership in the manuscript's symplectic-vacuum Gaussian class,
+  membership of $\psi^{\otimes2}$ in the prescribed closed $\Lambda$ kernel,
+  and $p_0(\psi)=1$. Kernel membership includes the required operator domain.
+
+  \textbf{Checked: the manuscript's characteristic-function argument.}
+  Membership in the actual closed kernel gives rotation invariance. Weyl
+  covariance then gives the \paperref{chi-rotation}{balanced rotation identity (Eq.~(6.3))}
+  for the input characteristic function. Continuity at zero and iteration
+  show that $\chi$ is strictly positive. Its logarithm obeys the parallelogram
+  law; polarization gives a continuous nonpositive real quadratic form $B(r,r)$
+  with $\chi(r)=\exp(B(r,r))$. The checked background Gaussian reconstruction
+  identifies the independent symplectic vacuum orbit. No moment or covariance
+  nondegeneracy assumption is used. Positivity and polarization are recorded
+  here as steps of this proposition's proof.
+
+  The forward implication for the symplectic vacuum orbit is also checked:
+  the constant vacuum polynomial is killed by the finite generator, and
+  \paperref{boson-invariance}{Symplectic invariance of the kernel projection (Eq.~(6.2))} gives certainty for
+  $zU_S\ket0$, including every global phase.
+
+\end{proposition}
+\leanproof{prp:mean-zero-gaussian}
+
+\begin{lemma}[Spectrum of the three-copy coherent test]\label{lem:S-spectrum-coherent-states}
+  \lean{GaussianTesting.coherent_spectrum_subset, GaussianTesting.Slp_nonneg, GaussianTesting.Slp_norm_le_one, GaussianTesting.coherent_polynomial_gap, GaussianTesting.blockGapQ, GaussianTesting.three_projection_gap_of_gram, GaussianTesting.gap_of_blocks_param, GaussianTesting.schrodingerCoherentAverage, GaussianTesting.schrodingerCoherentAverage_spectrum, GaussianTesting.schrodinger_coherent_spectrum_subset, GaussianTesting.threeVectorGram_charpoly_eval, GaussianTesting.threeVectorGram_spectrum, GaussianTesting.three_family_average_mem_spectrum_iff, GaussianTesting.coherentSectorConstantEigenvalue, GaussianTesting.coherentSectorSumZeroEigenvalue, GaussianTesting.coherentSectorMaxEigenvalue, GaussianTesting.coherentSectorGram_spectrum, GaussianTesting.coherentSectorEigenvalues_zero, GaussianTesting.coherentSectorEigenvalues_one, GaussianTesting.coherentSectorEigenvalues_two, GaussianTesting.coherentSectorMaxEigenvalue_zero, GaussianTesting.coherentSectorMaxEigenvalue_one, GaussianTesting.coherentSectorMaxEigenvalue_two, GaussianTesting.coherentSectorMaxEigenvalue_lt_half, GaussianTesting.coherentSectorMaxEigenvalue_le_half, GaussianTesting.Tq3_eq_family_average, GaussianTesting.blockSpectrumQ_nonzero}
+  \leanok
+  \uses{prelim:bosons, lem:coherent-projection, lem:bound-gradient}
+  \noderef{r6-6}{Lemma~6.6}\par
+  For the \paperref{coherent-q}{coherent test projection} $Q$,
+  the three-copy average $S_Q=(Q_{12}+Q_{13}+Q_{23})/3$ has
+  $\mathrm{spec}_{\C}(S_Q)\subseteq[0,1/2]\cup\{1\}$ on the full three-copy Fock
+  space for every number of modes. In particular, this holds on the actual
+  completed tensor cube of $L^2(\R^m)$, with the three physical pair projections.
+
+  The manuscript's \paperref{three-copy-fock}{three-copy Fock decomposition}
+  separates $V=\C v$, with $v=(1,1,1)^T$, from $W=V^\perp$ and
+  its occupation number $k$. Lean's \texttt{vVec} is $v$; its rational
+  \texttt{wVec} vectors are $\sqrt6\,w_{12}$, $\sqrt6\,w_{13}$ and
+  $\sqrt6\,w_{23}$. The frame orders the center first and complement second.
+  The normalized rotated occupation vectors realize these subspaces.
+  Distinct occupation labels are orthogonal, while the three vectors for
+  one label have Gram overlap $s=(-1/2)^k$. Their rank-one projection average
+  is exactly the corresponding block of $S_Q$.
+
+  The common three-by-three Gram matrix has characteristic polynomial
+  $(z-(1+2s))(z-(1-s))^2$. Its nonzero eigenvalues, divided by three, are
+  exactly the nonzero spectral values of the projection average:
+  \[
+    \frac{1+2(-1/2)^k}{3},\qquad \frac{1-(-1/2)^k}{3}.
+  \]
+  For $k=0$ these are $1,0$; for $k=1$ they are $0,1/2$; for $k=2$ they
+  are $1/2,1/4$. For every $k\ge3$ their maximum is strictly below $1/2$.
+  The public proof derives the polynomial inequality
+  $\operatorname{Re}\langle v,(S_Q-I)(S_Q-\tfrac12I)v\rangle\ge0$
+  from this exact classification of each finite-block eigenvector, then
+  sums over the orthogonal number blocks. Positivity, contractivity and the
+  \paperref{spectral-gap}{spectral equivalence} give the stated inclusion.
+
+  The proved number basis, product tensors, balanced splitter and vacuum
+  projection identify this coefficient average with the physical average
+  on the completed tensor cube. Unitary conjugation preserves the entire
+  spectrum. The abstract symmetric-Fock notation is realized by these
+  occupation coordinates and supplies no assumed premise.
+\end{lemma}
+\leanproof{lem:S-spectrum-coherent-states}
+
+\begin{lemma}[Purity bound for a density operator]\label{lem:purity}
+  \lean{GaussianTesting.purity_schrodinger, GaussianTesting.schrodinger_signedSwap_trace, GaussianTesting.HilbertDensity.signedSwap_trace_norm_le_purity, GaussianTesting.HilbertDensity.IsDensityOperator.purity_le_norm, GaussianTesting.schrodinger_acceptance_real, GaussianTesting.schrodinger_acceptance_mem_Icc}
+  \leanok
+  \uses{prelim:bosons, def:P0B}
+  \noderef{r6-2}{Lemma~6.2}\par
+  For every \paperref{density}{density operator} $\rho$ on actual
+  $L^2(\R^m)$, the \paperref{lambda-b}{graph-closed kernel test} satisfies
+  \[
+    \operatorname{Tr}(\rho^{\otimes2}P_0)\ge1-\tau
+    \quad\Longrightarrow\quad \norm\rho_\infty\ge1-2\tau.
+  \]
+  The two-copy state is the canonical product-wavefunction realization
+  $\sigma=T(\rho\otimes\rho)T^*$. Its acceptance trace is real and belongs
+  to $[0,1]$; Lean uses its real part for the order comparison. The bases in
+  the public theorem are arbitrary, and both the density criterion and trace
+  are basis independent.
+
+  The product-wavefunction formula gives
+  $U_{\pi/2}T(f\otimes g)=T(Jg\otimes f)$, where $Jg(x)=g(-x)$.
+  Follow the manuscript's three steps. Since $U_{\pi/2}P_0=P_0$,
+  \[
+    2\operatorname{Tr}(P_0\sigma)-1
+    \le\operatorname{Re}\operatorname{Tr}(U_{\pi/2}\sigma).
+  \]
+  The signed-swap action on actual product wavefunctions gives the complex
+  identity $\operatorname{Tr}(U_{\pi/2}\sigma)=\operatorname{Tr}(J\rho^2)$.
+  Finally, Cauchy--Schwarz and unitarity give
+  \[
+    |\operatorname{Tr}(J\rho^2)|
+    \le\operatorname{Tr}(\rho^2)\le\norm\rho_\infty.
+  \]
+  Cyclicity gives the product order in the hypothesis. The normalized Gram
+  representation and absolutely convergent trace identities establish the
+  argument for every density operator, with no moment or intertwining
+  assumption. The coordinate operator-trace statements are also checked;
+  the existing \paperref{boson-reduced-state}{reduced-family theorem (Eq.~(6.5))} remains a corollary used by the
+  concrete four-copy development.
+\end{lemma}
+\leanproof{lem:purity}
+
+\begin{lemma}[Four-copy projection and reduced-state expectation]\label{lem:four-copy}
+  \lean{GaussianTesting.waveTensorEquiv, GaussianTesting.schrodingerFourCopyProjection_symmetric, GaussianTesting.schrodingerFourCopyProjection_idempotent, GaussianTesting.HilbertDensity.operatorTrace_mul_reducedRight, GaussianTesting.HilbertDensity.reducedRight_basis, GaussianTesting.HilbertDensity.reducedRight_reshuffle_square, GaussianTesting.schrodingerReducedState_isDensityOperator, GaussianTesting.schrodingerFourCopyProjection_expectation_eq_reducedTrace, GaussianTesting.schrodingerFourCopyAcceptance_eq_reducedTrace, GaussianTesting.schrodingerFourCopyAcceptance_mem_Icc}
+  \leanok
+  \uses{prelim:bosons, def:P0B}
+  \noderef{boson-reduced-state}{Eq.~(6.5)}\par
+  The \paperref{four-copy}{four-copy accepting projection} is defined as follows.
+  On four completed copies of $L^2(\R^m)$, the operator
+  \[
+    P=U_{\pi/4}^{\otimes2}P_{0,24}(U_{\pi/4}^\dagger)^{\otimes2}
+  \]
+  is an orthogonal projection. For a unit input $\psi$, let $\rho$ be
+  the reduced state on register two of $U_{\pi/4}^\dagger\psi^{\otimes2}$.
+  The \paperref{boson-reduced-state}{acceptance identity used in Proposition~6.3 (Eq.~(6.5))} is
+  \[
+    \langle\psi^{\otimes4},P\psi^{\otimes4}\rangle
+      =\operatorname{Tr}(P_0\rho^{\otimes2})\in[0,1].
+  \]
+  Finite-measure rectangle indicators prove that the product-wavefunction
+  isometry is onto. The inverse physical rotation therefore acts on the
+  completed tensor square. Its coordinate columns give a basis-independent
+  positive trace-class reduced operator, characterized by
+  $\operatorname{Tr}(B\rho)=\langle\Phi,(I\otimes B)\Phi\rangle$.
+  Regrouping $(12)(34)$ as $(13)(24)$ factors the reduced columns, yielding
+  $\rho\otimes\rho$. Unitary conjugation proves the projection identities.
+\end{lemma}
+\leanproof{lem:four-copy}
+
+\begin{lemma}[Coherent accepting projection]\label{lem:coherent-projection}
+  \lean{GaussianTesting.waveVacuum_norm, GaussianTesting.waveVacuum_annihilation, GaussianTesting.waveParity_vacuum, GaussianTesting.schrodingerTensorRotation_balanced_swap, GaussianTesting.schrodingerQ_isAcceptance, GaussianTesting.schrodingerQ_expectation_real, GaussianTesting.schrodingerCoherentAcceptance_mem_Icc, GaussianTesting.schrodingerQ_expectation_eq_reducedTrace, GaussianTesting.schrodingerCoherentAcceptance_eq_vacuumExpectation, GaussianTesting.QB_eq_conj}
+  \leanok
+  \uses{prelim:bosons}
+  \noderef{coherent-q}{Coherent acceptance, Eq.~(6.6)}\par
+  On actual one-copy wavefunctions, the normalized vacuum is
+  $v_0(x)=\pi^{-m/4}\exp(-\norm x^2/2)$. Let
+  \[
+    Q=U_{\pi/4}(I\otimes|v_0\rangle\langle v_0|)U_{\pi/4}^\dagger.
+  \]
+  This is an orthogonal projection commuting with the two-copy swap $S$.
+  Its expectation on $\psi^{\otimes2}$ is real and, for unit $\psi$, lies
+  in $[0,1]$. For the reduced state $\rho$ of the inverse-rotation output,
+  \[
+    q(\psi)=\operatorname{Tr}(|v_0\rangle\langle v_0|\rho)=\langle v_0,\rho v_0\rangle.
+  \]
+  The Gaussian integral proves $\norm{v_0}=1$, every coordinate annihilation
+  operator kills $v_0$, and reflection fixes $v_0$.
+  The actual coordinate formula at angle $\pi/4$ gives
+  $S U_{\pi/4}=U_{\pi/4}(I\otimes J)$. Hence $SQ=Q=QS$.
+  The reduced-state equality is the checked partial-trace identity applied
+  to the vacuum projection. Separately, \texttt{QB\_eq\_conj} establishes
+  the conjugated-vacuum formula in occupation coordinates. The checked number
+  basis identifies the two realizations. The particle-counting readout is
+  checked in \paperref{f1c}{Figure~1(c)}.
+\end{lemma}
+\leanproof{lem:coherent-projection}
+
+\begin{theorem}[Fidelity bound for mean-zero Gaussian states]\label{thm:main-boson-mean-zero}
+  \lean{GaussianTesting.schrodinger_meanZero_fidelity, GaussianTesting.schrodinger_meanZero_fidelity_witness, GaussianTesting.schrodinger_threeCopyAverage_eq_kacAverage, GaussianTesting.schrodinger_meanZero_spectrum_subset}
+  \uses{thm:bound-fidelity-gradient-flow, thm:kac-walk, def:P0B, prp:mean-zero-gaussian, prelim:flow}
+  \noderef{r6-4}{Theorem~6.4}\par
+  \leanok
+  If $p_0(\psi)\ge1-\tau$, there is a mean-zero Gaussian state
+  $\phi\in\mathcal G_m^0$ such that
+  \[
+    1-8\tau\le\fid{\psi}{\phi}\le F_{\mathcal G_m^0}(\psi)^2.
+  \]
+
+  The proof follows the manuscript on the physical tensor cube. The canonical
+  wavefunction equivalence intertwines the three pair rotations with the
+  SO(3) coordinate-axis rotations. Their period averages are the closed-kernel
+  pair projections, including on entangled vectors. Thus $S_0=T_\pi$.
+  The checked arbitrary-representation assertion of
+  \paperref{r4-1}{Theorem~4.1} gives the spectrum in $[0,7/12]\cup\{1\}$.
+  \paperref{r3-4}{Theorem~3.4} supplies the constant $8$ and a certainty witness;
+  \paperref{r6-1}{Proposition~6.1} identifies it with the independent centered
+  Gaussian vacuum orbit. Its squared overlap is bounded above by the
+  \paperref{fidelity}{supremum in Eq.~(3.2)}. The only assumptions are unit norm
+  and the displayed acceptance bound. Spherical Kac sharpness is not needed.
+\end{theorem}
+\leanproof{thm:main-boson-mean-zero}
+
+\begin{theorem}[Fidelity bound for coherent states]\label{thm:main-boson-coherent}
+  \lean{GaussianTesting.schrodinger_coherent_fidelity, GaussianTesting.schrodinger_coherent_fidelity_witness, GaussianTesting.coherentWaveStates_eq_certaintyStates}
+  \uses{thm:bound-fidelity-gradient-flow, lem:S-spectrum-coherent-states, prp:general-certainty, prelim:flow}
+  \noderef{r6-5}{Theorem~6.5}\par
+  \leanok
+  If the coherent test accepts a pure state with probability at least $1-\tau$,
+  its squared fidelity with the coherent states is at least $1-4\tau$.
+
+  The proof follows the manuscript on actual wavefunctions.
+  \paperref{r6-6}{Lemma~6.6} supplies the spectral inclusion for the physical
+  three-pair average with $\alpha=1/2$. The physical $Q$ is a symmetric
+  idempotent commuting with swap, and the vacuum supplies a certainty state.
+  \paperref{r3-4}{Theorem~3.4} therefore gives the constant
+  $(1-3\alpha/2)^{-1}=4$ and a certainty witness.
+  \paperref{r6-3}{Proposition~6.3} identifies the normalized certainty set
+  with the independent displaced-vacuum class $\mathcal C_m$.
+  For one coherent comparison state $\phi$, Lean proves
+  \[
+    1-4\tau\le\fid{\psi}{\phi}\le F_{\mathcal C_m}(\psi)^2.
+  \]
+  The final inequality uses the supremum in \paperref{fidelity}{Eq.~(3.2)}.
+  The only hypotheses are unit norm and $q(\psi)\ge1-\tau$;
+  nonnegativity of $\tau$ follows from $q(\psi)\le1$.
+\end{theorem}
+\leanproof{thm:main-boson-coherent}
+
+\begin{theorem}[Fidelity bound for general bosonic Gaussian states]\label{thm:main-boson}
+  \lean{GaussianTesting.schrodinger_gaussian_fidelity, GaussianTesting.schrodinger_gaussian_fidelity_witness, GaussianTesting.schrodingerReducedState_top_eigenstate, GaussianTesting.schrodinger_meanZero_fidelity_witness, GaussianTesting.schrodingerReducedState_covariance, GaussianTesting.schrodingerCoherentAcceptance_inverse_symplectic}
+  \uses{thm:main-boson-mean-zero, thm:main-boson-coherent, lem:purity, lem:four-copy, prp:mean-zero-gaussian, prelim:flow}
+  \noderef{r6-7}{Theorem~6.7}\par
+  \leanok
+  If the four-copy test accepts a pure state with probability at least
+  $1-\tau$, its squared fidelity with the bosonic Gaussian states is at least
+  $1-48\tau$.
+
+  The physical proof follows the manuscript. For $\tau\le1/48$, Lemma~6.2
+  gives a top eigenstate $\xi$ of the reduced density with
+  $\lambda\ge1-2\tau$, the bound in \paperref{boson-top-eigenvalue}{Eq.~(6.8)}.
+  Positivity of the residual terms gives $p_0(\xi)\ge1-\tau/\lambda^2$.
+  Theorem~6.4 supplies the centered Gaussian approximant of
+  \paperref{boson-centered-approximation}{Eq.~(6.9)}:
+  $|\langle\gamma,\xi\rangle|^2\ge1-8\tau/\lambda^2$.
+  Its inverse symplectic unitary sends $\gamma$ to the vacuum.
+  Commutation with the balanced splitter proves the full reduced-operator
+  covariance $\sigma=U_S\rho U_S^\dagger$. The vacuum expectation in
+  \paperref{coherent-q}{Eq.~(6.6)} is consequently at least
+  $\lambda-8\tau/\lambda\ge1-12\tau$.
+  Theorem~6.5 gives a coherent comparison state with squared overlap at least
+  $1-48\tau$, and inverse transport gives a physical Gaussian witness.
+  The case $\tau>1/48$ uses nonnegativity. The same witness bounds the
+  squared supremal fidelity from Eq.~(3.2); no covariance or spectral
+  assumption is supplied by the caller.
+\end{theorem}
+\leanproof{thm:main-boson}
+
+\begin{proposition}[Gaussian and coherent certainty]\label{prp:general-certainty}
+  \lean{GaussianTesting.bosonicGaussian_and_coherent_characterization, GaussianTesting.schrodingerFourCopyAcceptance_eq_one_iff, GaussianTesting.schrodingerReducedState_rankOne_of_acceptance_one, GaussianTesting.gaussian_factorization_of_fourCopyAcceptance_one, GaussianTesting.mem_gaussianWaveStates_of_meanZero_factorization, GaussianTesting.displaced_meanZeroGaussian_factorization, GaussianTesting.schrodingerCoherentAcceptance_eq_one_iff, GaussianTesting.coherent_factorization_of_acceptance_one, GaussianTesting.coherent_factorization_normalized_character, GaussianTesting.continuous_character_eq_weyl_phase, GaussianTesting.coherent_factorization_eq_displaced_vacuum, GaussianTesting.displaced_vacuum_factorization}
+  \uses{prelim:bosons, prp:mean-zero-gaussian, lem:purity, lem:four-copy, lem:coherent-projection}
+  \noderef{r6-3}{Proposition~6.3}\par
+  \leanok
+  A unit physical wavefunction is Gaussian if and only if $p(\psi)=1$,
+  and coherent if and only if $q(\psi)=1$.
+
+  \textbf{The Gaussian equivalence.} For a displaced centered Gaussian,
+  \paperref{displacement-rotation}{Weyl covariance of the inverse splitter (Eq.~(6.4))}
+  moves the displacement into its first output. The second output is the
+  original centered Gaussian, so Proposition~6.1 makes $P_0$ accept the
+  retained factors with certainty.
+
+  Conversely, $p(\psi)=1$ gives $\operatorname{Tr}(P_0\rho^{\otimes2})=1$
+  for the actual second-register reduced state. Lemma~6.2 implies
+  $\norm{\rho}=1$, so $\rho=\ket\phi\!\bra\phi$ for a unit vector $\phi$.
+  Pure-reduction factorization gives $U_{\pi/4}^\dagger\psi^{\otimes2}=u\otimes\phi$,
+  and Proposition~6.1 identifies $\phi$ as centered Gaussian.
+  Apply its inverse symplectic unitary on both copies. Commutation with the
+  splitter turns the right factor into the vacuum, reducing to coherent
+  certainty. Weyl covariance transports the displaced vacuum back to the
+  independent Gaussian orbit. No extra moment or factorization assumption is used.
+
+  \textbf{The coherent equivalence.}
+  For a unit $\psi\in L^2(\R^m)$, Lean proves
+  \[
+    q(\psi)=1\quad\Longleftrightarrow\quad
+    \psi=zD_a\ket0\text{ for some }a\in\R^{2m},\ |z|=1.
+  \]
+  The proof follows the manuscript. The projection fixes the input exactly
+  when the inverse splitter output has a vacuum factor. Dividing its
+  characteristic-function identity by the nonzero vacuum characteristic
+  function gives the \paperref{normalized-chi}{normalized identity (Eq.~(6.7))},
+  which implies that the quotient is a continuous multiplicative character.
+  This character is a symplectic linear phase, and pure-state injectivity
+  identifies the displaced vacuum. Vacuum rotation invariance and Weyl
+  covariance prove the forward implication. These are proof steps of this
+  proposition, using the background facts in the bosonic preliminaries.
+
+\end{proposition}
+\leanproof{prp:general-certainty}
+
+\begin{corollary}[Testing bosonic Gaussian and coherent states]\label{cor:boson-testing}
+  \lean{GaussianTesting.bosonic_physical_testing, GaussianTesting.bosonicTestProtocol, GaussianTesting.repeatedTest_acceptance, GaussianTesting.testingCopies_le, GaussianTesting.testingCopies_le_rate}
+  \uses{thm:main-boson-mean-zero, thm:main-boson-coherent, thm:main-boson, prp:mean-zero-gaussian, prp:general-certainty, target:fig1-mean-zero, target:fig1-coherent, target:fig1-general}
+  \noderef{r6-8}{Corollary~6.8}\par
+  \leanok
+  For each of the three classes of general bosonic Gaussian, mean-zero
+  Gaussian and coherent states, and for $\varepsilon,\delta\in(0,1)$, there
+  is a test using $O(\varepsilon^{-2}\log(1/\delta))$ copies. It always
+  accepts a state in the class and rejects with probability at least
+  $1-\delta$ if its squared fidelity with the class is at most
+  $1-\varepsilon^2$. A round uses four copies for the general Gaussian test
+  and two copies for either of the other tests.
+
+  The protocol is the product Bernoulli law of the actual physical Born
+  probabilities, accepting precisely when every fresh-copy round accepts.
+  Its acceptance probability is exactly $p^n$. The certainty propositions
+  give perfect completeness; physical robustness gives rejection at least
+  $\varepsilon^2/c$ in one round, with $c=48,8,4$ respectively.
+  The exponential bound proves the asserted soundness for
+  $n=\lceil(c/\varepsilon^2)\log(1/\delta)\rceil$.
+  With $k=4,2,2$ copies per round, the exact total is $kn$, bounded by
+  $k(1+(c/\varepsilon^2)\log(1/\delta))$ throughout the displayed range.
+  For $\delta\le e^{-1}$, it is at most
+  $2kc\varepsilon^{-2}\log(1/\delta)$, an explicit constant for the
+  asymptotic rate. The circuit readouts are those proved in Figure~1(b)--(d).
+\end{corollary}
+\leanproof{cor:boson-testing}
+
+\chapter{Measurements and sample complexity}\label{sec:pending}
+
+The background needed by the proofs is collected in the preliminaries nodes
+of Sections~5 and~6; each result records its own proof steps. The entries below
+concern the manuscript's four circuits and the counting of input copies
+consumed by repeated measurements.
+
+\section*{The four measurements in Figure~1}
+
+Number wires from top to bottom, with each wire carrying one copy of the
+$m$-mode system. Write $U_+=U_{+\pi/4}$ and $U_-=U_{-\pi/4}=U_+^\dagger$
+for the balanced beam splitters in the manuscript's convention. Each target
+identifies an accepting projector and its Born probability on the stated input.
+
+\begin{theorem}[Figure 1(a), fermionic Bell measurement]\label{target:fig1-fermions}
+  \lean{GaussianTesting.fermionicBellBasis, GaussianTesting.fermionicBellReadout, GaussianTesting.fermionicBellReadout_apply, GaussianTesting.fermionicBellEigenvalue, GaussianTesting.fermionicBellAccepts, GaussianTesting.majoranaPair_fermionicBellVector, GaussianTesting.lambdaF_fermionicBellBasis, GaussianTesting.fermionicBellOutcomeProjection, GaussianTesting.fermionicBellMeasurement_eq_PF, GaussianTesting.fermionicBellReadout_probability, GaussianTesting.fermionicBellMeasurement_acceptance}
+  \uses{def:PF}
+  \noderef{f1a}{Figure~1(a)}\par
+  \leanok
+  \paperref{f1a}{Figure~1(a)} applies $U_{\mathrm{Bell}}$ to wires $(1,2)$
+  and measures both outputs. The phase and parity bitstrings $a,b$ label the
+  orthonormal product Bell basis with local vectors
+  \[
+    \beta_{a_k,b_k}=\frac{|0,b_k\rangle+(-1)^{a_k}|1,\neg b_k\rangle}{\sqrt2}.
+  \]
+  The unitary $U_{\mathrm{Bell}}$ sends these basis vectors to their
+  computational labels. The joint $c_j\otimes c_j$ eigenvalues, including
+  the Jordan--Wigner prefix signs, give the explicit integer readout
+  \[
+    \lambda(a,b)=\sum_k
+    \left(\prod_{\ell<k}(-1)^{b_\ell}\right)(-1)^{a_k}
+    \bigl(1-(-1)^{b_k}\bigr).
+  \]
+  Accept exactly when $\lambda(a,b)=0$. For the diagonal projection $D_A$
+  onto these classical outcomes, Lean proves
+  $U_{\mathrm{Bell}}^\dagger D_A U_{\mathrm{Bell}}=P_F$ on the full
+  two-copy space: the kernel projection fixes zero-eigenvalue Bell vectors
+  and annihilates every other Bell vector.
+  The sum of accepted Born probabilities equals the expectation of $P_F$;
+  on $\psi^{\otimes2}$ it is exactly $p(\psi)$.
+  The construction includes the zero-mode case.
+\end{theorem}
+\leanproof{target:fig1-fermions}
+
+\begin{theorem}[Figure 1(b), equal-number measurement]\label{target:fig1-mean-zero}
+  \lean{GaussianTesting.meanZeroNumberMeasurement_eq_P0, GaussianTesting.meanZeroNumberMeasurement_acceptance, GaussianTesting.equalNumberInverseSub_numberDifference}
+  \uses{def:P0B}
+  \noderef{f1b}{Figure~1(b)}\par
+  \leanok
+  \paperref{f1b}{Figure~1(b)} shifts every mode of wire~2 by $\pi/2$ before
+  applying $U_+$ to $(1,2)$. Measure the total count on each output, summing
+  over all $m$ modes, and accept if $N_1=N_2$. In the draft's convention
+  $R_{\pi/2}=\exp(-i\pi N/2)$ and $V_b=U_+(I\otimes R_{\pi/2})$.
+  The draft source gives the core calculation
+  $V_b^\dagger(N_1-N_2)V_b=-\Lambda_B$, which is checked on the finite
+  particle core. The transformed number vectors are generator eigenvectors;
+  their dense span identifies the bounded accepting projection. For
+  $D_{\mathrm{eq}}$ projecting onto equal totals, Lean proves the exact
+  physical identity $V_b^\dagger D_{\mathrm{eq}}V_b=P_0$ and the Born
+  probability $p_0(\psi)$. The phase is defined directly by $(-i)^{N_2}$
+  in the proved oscillator basis; no separate unbounded exponential
+  or number-operator domain identification is needed for the circuit result.
+\end{theorem}
+\leanproof{target:fig1-mean-zero}
+
+\begin{theorem}[Figure 1(c), vacuum measurement]\label{target:fig1-coherent}
+  \lean{GaussianTesting.waveTotalNumberProjection_zero, GaussianTesting.coherentNumberMeasurement_eq_Q, GaussianTesting.coherentNumberMeasurement_acceptance}
+  \uses{lem:coherent-projection}
+  \noderef{f1c}{Figure~1(c)}\par
+  \leanok
+  \paperref{f1c}{Figure~1(c)} applies $U_-$ to $(1,2)$, discards output~1,
+  and accepts when the total number on output~2 is zero. With
+  $D_0=|0\rangle\langle0|$, the required
+  \paperref{coherent-q}{coherent test projection} is
+  $U_+(I\otimes D_0)U_-=Q_B$ and its Born probability is $p_Q(\psi)$.
+  The physical total-number projection retains precisely oscillator basis
+  vectors whose occupation numbers sum to the measured value. The sum is zero
+  exactly when every occupation is zero, so its zero-outcome projection is
+  the physical vacuum projection. Conjugating by the actual splitter proves
+  that the circuit effect is $Q$, and its Born probability is $q(\psi)$.
+\end{theorem}
+\leanproof{target:fig1-coherent}
+
+\begin{theorem}[Figure 1(d), four-copy measurement]\label{target:fig1-general}
+  \lean{GaussianTesting.fourCopyFigurePreparation_explicit, GaussianTesting.fourCopyFigurePreparation_eq, GaussianTesting.fourCopyFigureProjection_eq, GaussianTesting.fourCopyNumberMeasurement_eq_projection, GaussianTesting.fourCopyNumberMeasurement_acceptance}
+  \uses{target:fig1-mean-zero, lem:four-copy}
+  \noderef{f1d}{Figure~1(d)}\par
+  \leanok
+  \paperref{f1d}{Figure~1(d)} applies $U_-$ on both $(1,2)$ and $(3,4)$.
+  Discard outputs~1 and~3, retain the difference outputs~2 and~4, and apply
+  \paperref{f1b}{Figure~1(b)} to $(2,4)$ with its phase shift on wire~4.
+
+  Writing $V_d=U_-^{(12)}U_-^{(34)}$, the diagram's accepting operator is
+  \[
+    V_d^\dagger P_{0,24}V_d
+      = U_+^{\otimes2}P_{0,24}U_-^{\otimes2}=P.
+  \]
+  Lean constructs the preparation with both displayed negative-angle splitters
+  and regroups the discarded registers $(1,3)$ and retained registers $(2,4)$.
+  This proves direct equality with the \paperref{four-copy}{Section~6 projection}
+  on the full four-copy space. Replacing $P_0$ by the checked physical readout
+  from panel~(b) preserves that operator equality. Its Born probability on
+  $\psi^{\otimes4}$ is therefore $p(\psi)$.
+  The introductory \paperref{difference-parity}{difference-output parity assertion}
+  is a separately checked claim in
+  \bplink{lem:difference-parity}{Parity and mean of the difference output}.
+\end{theorem}
+\leanproof{target:fig1-general}
+
+\begin{lemma}[Parity and mean of the difference output]\label{lem:difference-parity}
+  \lean{GaussianTesting.schrodingerDifference_even, GaussianTesting.schrodingerDifference_column_even, GaussianTesting.schrodingerReducedState_even, GaussianTesting.waveParity_fourier_of_even, GaussianTesting.waveGramDensity, GaussianTesting.waveGramDensity_integrable, GaussianTesting.waveGramDensity_integral, GaussianTesting.waveGramDensity_integrable_component_moment, GaussianTesting.schrodingerDifferenceDensity, GaussianTesting.schrodingerDifferenceFourierDensity, GaussianTesting.schrodingerDifferenceDensity_total, GaussianTesting.schrodingerDifferenceDensity_normalized, GaussianTesting.wavePositionEvent, GaussianTesting.waveFourierEvent, GaussianTesting.schrodingerDifferenceDensity_positionEvent, GaussianTesting.schrodingerDifferenceFourierDensity_positionEvent, GaussianTesting.schrodingerReducedState_globalFirstMoments, GaussianTesting.schrodingerReducedState_firstMoments_of_global}
+  \leanok
+  \uses{prelim:bosons, lem:four-copy}
+  \noderef{difference-parity}{Introduction, difference-output assertion}\par
+  For identical pure inputs, let
+  $\Phi=U_{\pi/4}^{\dagger}\psi^{\otimes2}$ and let $\rho$ be its
+  difference-register reduced state. The balanced swap identity gives
+  $(I\otimes J)\Phi=\Phi$. Consequently every Gram column of $\rho$
+  is even, and $J\rho=\rho$: the reduced state is supported on the even
+  subspace, a stronger conclusion than parity-conjugation invariance.
+
+  Choose a countable Hilbert basis, such as the proved number basis.
+  The squared amplitudes of the Gram columns sum to an integrable position
+  density; their Fourier transforms give the Fourier-coordinate density.
+  Each density has mass $\operatorname{Tr}\rho$, hence one for unit input.
+  Their integrals on measurable sets equal the traces of the actual bounded
+  position-indicator operators and their Fourier conjugates against $\rho$.
+  Thus these are the reduced state's outcome densities.
+
+  Fourier transformation preserves even parity, so both global densities
+  are even. If their respective coordinate-weighted functions are
+  integrable, reflection makes their integrals zero. This proves vanishing
+  position and momentum means whenever the first moments exist; physical
+  momentum is $2\pi$ times Mathlib's Fourier coordinate. Nonnegative
+  domination also derives integrability of each Gram-column moment from
+  the global hypothesis, and gives the corresponding Gram-sum formulas.
+\end{lemma}
+\leanproof{lem:difference-parity}
+
+\section*{The Gaussian testing theorem}
+
+\begin{theorem}[Gaussian-square span and optimality]\label{target:span-optimality}
+  \lean{GaussianTesting.fermionicGaussianSquareSpan_eq_kernel, GaussianTesting.swap2_PF, GaussianTesting.closedSpan_projection_le_effect, GaussianTesting.fermionicTest_projection_le_effect, GaussianTesting.fermionicTest_acceptance_le, GaussianTesting.meanZeroGaussianSquareSpan, GaussianTesting.meanZeroGaussianSquareSpan_eq_symmetric_kernel, GaussianTesting.mem_meanZeroGaussianSquareSpan_iff, GaussianTesting.polynomial_mem_copyGramAlgebra_of_invariant, GaussianTesting.polynomialGaussian_mem_meanZeroGaussianSquareSpan, GaussianTesting.meanZeroGaussianSquareSpan_projection_square, GaussianTesting.bosonicMeanZeroGaussian_optimality}
+  \leanok
+  \uses{lem:exact-fermions, target:fig1-fermions, prp:mean-zero-gaussian, prelim:bosons}
+  \noderef{span-optimality}{Section~1, span and optimality assertion}\par
+  The Gaussian tensor squares span the accepting subspace, with the symmetric
+  subspace restriction in the bosonic case. Their orthogonal projection is
+  the least positive contraction with perfect completeness, so its acceptance
+  is minimal on every identical two-copy input.
+
+  \textbf{Fermionic span.}
+  The \paperref{fermion-kernel-span}{fermionic kernel} is exactly the linear
+  span of Gaussian squares from both parity classes, for every mode count.
+  Consequently $P_F$ is supported on the symmetric subspace. The span is
+  invariant under $c_j\otimes c_j$ and simultaneous Gaussian rotations.
+  The joint Bell eigenlines are one-dimensional. A nonzero overlap with the
+  vacuum square supplies one balanced eigenline; signed coordinate
+  permutations supply all balanced eigenlines, which span $\ker\Lambda_F$.
+  This proves the span statement directly. The manuscript specifies twirling
+  over the full orthogonal group in the cited argument, including both parity
+  classes. The checked proof uses the previously agreed invariant-span argument.
+
+  For any Hilbert space, a positive contraction with certainty on a set
+  fixes its closed span. Its compression to the orthogonal complement is
+  positive, so it dominates the span projection. Applied to the checked
+  fermionic span, this proves optimality even on arbitrary two-copy vectors.
+
+  \textbf{Bosonic span.} On actual $L^2(\mathbb R^{2m})$, the closed span of
+  centered Gaussian squares is exactly
+  $\ker\Lambda\cap\{f:Sf=f\}$, where $S$ interchanges the two copies.
+  This holds for every mode count, including zero, without a moment
+  assumption on the kernel vectors. Rotation averaging preserves polynomial
+  Gaussians because each polynomial orbit lies in a finite-dimensional span.
+  Averaging also over swap produces polynomials invariant under both actions.
+  In complex coordinates $u=x+iy$, $v=x-iy$, these are balanced polynomials
+  fixed by interchange of $u,v$. Finite-dimensional duality and the joint
+  kernel of the symmetric mixed derivatives show that they are generated by
+  $u_i v_j+u_j v_i$, hence by $x_i x_j+y_i y_j$ in real coordinates.
+
+  Identical quadratic phase operators preserve the Gaussian-square span.
+  Differentiating their matrix coefficients, with an integrable dominating
+  function, puts each Gram quadratic times a polynomial Gaussian in that
+  span. Algebra induction starts from the vacuum square. Density of
+  polynomial Gaussians and continuity of rotation/swap averaging then give
+  every symmetric kernel vector. The reverse inclusion uses
+  Proposition~6.1 and symmetry of identical squares.
+
+  On identical inputs, the actual $P_0$ agrees with this span projection:
+  $P_0$ commutes with swap, so its output remains symmetric. The general
+  positive-contraction argument therefore proves the manuscript's bosonic
+  optimality assertion. The alternative effect needs no swap invariance.
+  The manuscript's wording ``measures exactly the span'' is retained in
+  its stated identical two-copy-input context.
+\end{theorem}
+\leanproof{target:span-optimality}
+
+\begin{theorem}[Pure-state trace distance]\label{lem:pure-state-trace-distance}
+  \lean{GaussianTesting.pureStateDifference, GaussianTesting.traceNorm, GaussianTesting.pureStateTraceDistance, GaussianTesting.pureStateDifference_cube, GaussianTesting.abs_pureStateDifference, GaussianTesting.isPositiveTraceClass_abs_pureStateDifference, GaussianTesting.traceNorm_pureStateDifference, GaussianTesting.pureStateTraceDistance_eq_sqrt, GaussianTesting.pureStateTraceDistance_eq_half_traceNorm, GaussianTesting.le_pureStateTraceDistance_iff}
+  \noderef{trace-distance}{After Theorem~1.1}\par
+  \leanok
+  For unit vectors in any complex Hilbert space,
+  \[
+    D(\psi,\phi)=\frac12\bigl\||\psi\rangle\langle\psi|
+      -|\phi\rangle\langle\phi|\bigr\|_1
+      =\sqrt{1-|\langle\psi,\phi\rangle|^2}.
+  \]
+  The trace norm is defined as $\operatorname{Tr}|A|$, with
+  $|A|=\sqrt{A^\dagger A}$. For the difference $A$ of the two rank-one
+  projections, Lean proves that $|A|$ is positive trace class and that its
+  trace is independent of the Hilbert basis. No finite-dimensional
+  assumption is made.
+
+  Put $d=\sqrt{1-|\langle\psi,\phi\rangle|^2}$.
+  The rank-one calculation gives $A^3=d^2A$ and
+  $\operatorname{Tr}A^2=2d^2$. For $d>0$, positivity and uniqueness of
+  the square root give $|A|=d^{-1}A^2$, hence $\operatorname{Tr}|A|=2d$.
+  For $d=0$, the rank-one projections coincide.
+  Thus, for every $\varepsilon\ge0$, $D(\psi,\phi)\ge\varepsilon$
+  is equivalent to $|\langle\psi,\phi\rangle|^2\le1-\varepsilon^2$.
+\end{theorem}
+\leanproof{lem:pure-state-trace-distance}
+
+\begin{theorem}[Testing Gaussianity with constant sample complexity]\label{target:measurement-endpoints}
+  \lean{GaussianTesting.fermionic_gaussian_testing, GaussianTesting.bosonic_gaussian_testing, GaussianTesting.fermionic_gaussian_testing_traceDistance, GaussianTesting.bosonic_gaussian_testing_traceDistance, GaussianTesting.pureFidelity_sq_le_iff, GaussianTesting.fermionicTestCopies_le_rate, GaussianTesting.testingCopies_le_rate}
+  \uses{cor:fermion-testing, cor:boson-testing, lem:pure-state-trace-distance, def:fidelity, prp:general-certainty, prelim:fermions, prelim:bosons, target:fig1-fermions, target:fig1-mean-zero, target:fig1-coherent, target:fig1-general}
+  \noderef{r1-1}{Theorem~1.1}\par
+  \leanok
+  For $\varepsilon,\delta\in(0,1)$, bosonic and fermionic systems admit tests
+  using $O(\varepsilon^{-2}\log(1/\delta))$ copies of a pure state $\psi$.
+  Each test always accepts a Gaussian state. If every Gaussian state
+  $\phi$ has $\fid{\psi}{\phi}\le1-\varepsilon^2$, the test rejects with
+  probability at least $1-\delta$.
+
+  The physical bosonic classes and all three bosonic
+  circuits, followed by independent repetition with exact copy counts,
+  are established in \paperref{r6-8}{Corollary~6.8}.
+  The independent fermionic Gaussian class, the manuscript proofs of
+  Lemma~5.1 and Theorem~5.2, and the repeated pair-test protocol with exact
+  copy counts are established in \paperref{r5-3}{Corollary~5.3}.
+  The accepting Bell-readout projection in \paperref{f1a}{Figure~1(a)}
+  is identified with $P_F$.
+
+  The pointwise overlap promise is equivalent to the bound on squared
+  class fidelity in the corollaries. The
+  \paperref{trace-distance}{rank-one trace-distance identity}
+  gives exactly the interpretation as distance at least $\varepsilon$
+  from every Gaussian state, with the same protocols.
+
+  For fermions take $(k,C)=(2,8)$, and for general bosons take
+  $(k,C)=(4,48)$. The exact copy count is
+  $k\lceil(C/\varepsilon^2)\log(1/\delta)\rceil$, bounded uniformly by
+  $kC\varepsilon^{-2}\log(1/\delta)+k$.
+  For $\delta\le e^{-1}$ it is at most
+  $2kC\varepsilon^{-2}\log(1/\delta)$, independently of the number of modes.
+  The additive round in the uniform bound is the ceiling qualification
+  recorded in the manuscript's source comment. The bosonic interface also
+  includes mean-zero Gaussian and coherent states, with $(k,C)=(2,8),(2,4)$.
+\end{theorem}
+\leanproof{target:measurement-endpoints}

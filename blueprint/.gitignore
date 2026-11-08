@@ -1,0 +1,14 @@
+# Generated blueprint output
+/web/
+/print/
+/lean_decls
+src/web.paux
+src/*.bbl
+src/*.aux
+src/*.log
+src/*.out
+src/*.toc
+src/*.fls
+src/*.fdb_latexmk
+src/*.synctex.gz
+src/packages/__pycache__/

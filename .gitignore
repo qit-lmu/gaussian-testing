@@ -1,0 +1,21 @@
+/.lake
+/docbuild/.lake
+/_site
+/.venv/
+
+# Local Python and operating-system files.
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Compiled manuscript output; keep the TeX source and bibliography.
+/material/*.aux
+/material/*.bbl
+/material/*.blg
+/material/*.fdb_latexmk
+/material/*.fls
+/material/*.log
+/material/*.out
+/material/*.synctex.gz
+/material/*.toc
+/material/manuscript.pdf

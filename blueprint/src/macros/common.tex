@@ -1,0 +1,34 @@
+% Macros shared by the web and print versions of the blueprint.
+
+% B-numbers identify local blueprint entries; paper references use the
+% manuscript's numbering and link to its entry in the source index.
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\renewcommand{\thetheorem}{B\arabic{theorem}}
+
+\newcommand{\paperref}[2]{\bplink{paper:#1}{\textbf{#2}}}
+
+% Node headings link to the same manuscript index as references in the text.
+% The node ends the heading paragraph after its last reference or qualifier.
+\newcommand{\noderef}[2]{\paperref{#1}{#2}}
+\newcommand{\proofref}[2]{\textnormal{In the proof of }\noderef{#1}{#2}}
+\newcommand{\supportingnode}{\textbf{Supporting result}}
+% Checked components of a manuscript statement whose full proof remains open.
+% This mark is visible in both editions and does not set Lean's proof flags.
+\newcommand{\partialproof}{\textnormal{\textbf{Partial proof.}}\space}
+
+% Light-weight notation used in the statements.
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Lambdaop}{\Lambda}
+\newcommand{\acc}{p}
+\newcommand{\fid}[2]{\lvert\langle #1, #2\rangle\rvert^2}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ket}[1]{\lvert #1 \rangle}
+\newcommand{\bra}[1]{\langle #1 \rvert}

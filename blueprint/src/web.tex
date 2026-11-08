@@ -1,0 +1,29 @@
+% Web (HTML) version of the blueprint, built with plasTeX + the leanblueprint
+% and plastexdepgraph plugins. See docs/development.md for build instructions.
+
+\documentclass{report}
+
+\usepackage{amssymb, amsthm, amsmath}
+\usepackage{hyperref}
+% `nonreducedgraph` keeps every dependency edge (no transitive reduction).
+% The compact layout uses native Graphviz to arrange each section, then the
+% browser preserves these positions while retaining the interactive nodes.
+\usepackage[dep_graph, nonreducedgraph]{blueprint}
+\usepackage{localsources}
+\usepackage{manuscriptgraph}
+
+\input{macros/common}
+\input{macros/web}
+
+\home{https://qit-lmu.github.io/gaussian-testing/}
+\github{https://github.com/qit-lmu/gaussian-testing}
+
+\title{Testing bosonic and fermionic Gaussian states with a constant number of copies}
+\author{Jop Bri\"et, Davi Castro-Silva, Michael Walter, Freek Witteveen}
+\graphcolor{proved}{#D6F0E1}{Pale mint}
+\graphcolor{fully_proved}{#9CEC8B}{Green}
+
+\begin{document}
+\maketitle
+\input{content}
+\end{document}

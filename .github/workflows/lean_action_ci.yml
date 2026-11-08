@@ -1,0 +1,77 @@
+name: Lean Action CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: leanprover/lean-action@v1
+      - name: Reject sorry throughout the library
+        run: lake env lean scripts/NoSorry.lean
+      - name: Audit theorem axioms
+        run: lake env lean scripts/Audit.lean
+      - name: Check public manuscript statements and proof dependencies
+        run: lake env lean scripts/ManuscriptChecks.lean
+      - name: Check README Lean statements
+        run: python3 scripts/check_readme.py
+      - name: Check manuscript reference parser
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - name: Check manuscript index and linked declarations
+        run: python3 scripts/manuscript_map.py --check-lean
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: blueprint/requirements.txt
+      - name: Install blueprint dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            graphviz latexmk texlive-latex-recommended texlive-fonts-recommended \
+            dvisvgm ghostscript
+          python -m pip install -r blueprint/requirements.txt
+      - name: Build blueprint HTML
+        run: leanblueprint web
+      - name: Check rendered manuscript links and both dependency layouts
+        run: python scripts/manuscript_map.py --check-html
+      - name: Check blueprint Lean declarations
+        run: bash blueprint/check-decls.sh
+      - name: Build blueprint PDF
+        run: leanblueprint pdf
+      - name: Assemble and check the Pages site
+        run: python3 scripts/build_pages.py
+      - name: Upload checked Pages site
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+      - name: Deploy checked documentation
+        id: deployment
+        uses: actions/deploy-pages@v5

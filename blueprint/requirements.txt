@@ -1,0 +1,6 @@
+# Renderer versions used by the manuscript links and compact/wide graph checks.
+leanblueprint==0.0.20
+plasTeX==3.1
+plastexdepgraph==0.0.5
+plastexshowmore==0.0.2
+pygraphviz==2.0.4

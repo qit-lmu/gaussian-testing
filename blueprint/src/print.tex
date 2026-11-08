@@ -1,0 +1,34 @@
+% Printable (pdf) version of the blueprint. Build with `leanblueprint pdf`
+% (which runs latexmk/pdflatex via latexmkrc).
+%
+% This preamble deliberately uses pdflatex-friendly packages (no fontspec /
+% unicode-math) so the pdf builds with a standard TeX Live install.
+
+\documentclass[a4paper]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{expl3}
+
+\usepackage{amssymb, amsthm, mathtools}
+% Mathematical symbols occurring in the generated manuscript-index prose.
+\DeclareUnicodeCharacter{2212}{\ensuremath{-}}
+\DeclareUnicodeCharacter{2264}{\ensuremath{\le}}
+\DeclareUnicodeCharacter{2265}{\ensuremath{\ge}}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=magenta,citecolor=blue]{hyperref}
+
+\input{macros/common}
+\input{macros/print}
+
+\title{Testing bosonic and fermionic Gaussian states with a constant number of copies}
+\author{Jop Bri\"et, Davi Castro-Silva, Michael Walter, Freek Witteveen}
+
+\begin{document}
+% Allow lines containing long Lean names to break without overrunning the margin.
+\setlength{\emergencystretch}{2em}
+\hypersetup{pageanchor=false}
+\maketitle
+\hypersetup{pageanchor=true}
+\input{content}
+\end{document}

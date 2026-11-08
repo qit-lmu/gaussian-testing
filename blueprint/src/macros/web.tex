@@ -1,0 +1,17 @@
+% Macros used only by the web version of the blueprint.
+% Their printed counterparts live in macros/print.tex.
+
+% plasTeX resolves a label across HTML pages through the hyperlink template.
+\newcommand{\bplink}[2]{\hyperlink{#1}{#2}}
+\newcommand{\bpdecls}[1]{#1}
+% localsources emits each referenced file under this portable relative path.
+\newcommand{\bpsource}[3]{\href{sources/#1.html\#L#2}{#3}}
+
+% Record completed proofs separately from the statement's \leanok marker.
+\newcommand{\leanproof}[1]{%
+  \begin{proof}
+    \proves{#1}
+    \leanok
+    Formalized in Lean.
+  \end{proof}%
+}
